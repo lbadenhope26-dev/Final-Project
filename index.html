@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluorescence & Stokes Shift Simulation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+        }
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .center-col {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 500px;
+        }
+        canvas {
+            background-color: #000;
+            border: 2px solid #444;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .panel {
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .readout {
+            background-color: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .readout div {
+            display: flex;
+            justify-content: space-between;
+        }
+        .readout span {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .total-energy {
+            border-top: 1px solid #444;
+            padding-top: 8px;
+            margin-top: 5px;
+            color: #2ecc71;
+        }
+        .energy-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        .bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: #444;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        #bar-in { background-color: #9b59b6; }
+        #bar-heat { background-color: #e67e22; }
+        #bar-out { background-color: #2ecc71; }
+        .bar-label {
+            position: absolute;
+            top: 0;
+            left: 5px;
+            font-size: 0.8em;
+            line-height: 20px;
+            text-shadow: 1px 1px 2px black;
+        }
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: -10px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #8e44ad; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        
+        .color-preview {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-left: 5px;
+            border: 1px solid #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-col">
+        <div class="graph-header">
+            <span>Physical Space (Fluorescence)</span>
+        </div>
+        <canvas id="simCanvas" width="450" height="300"></canvas>
+    </div>
+
+    <div class="center-col">
+        <div class="graph-header">
+            <span>Jablonski Energy Diagram (The "Bouncing Ball" Stairs)</span>
+        </div>
+        <canvas id="jablonskiCanvas" width="450" height="300"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3>Laser & Dye Parameters</h3>
+        
+        <div class="control-group">
+            <label>Incoming UV Laser (λ) <span id="val-wave-in">350 nm</span></label>
+            <input type="range" id="sl-wave-in" min="200" max="450" step="5" value="350">
+        </div>
+
+        <div class="control-group">
+            <label>Vibrational Energy Loss <span id="val-heat">30%</span></label>
+            <input type="range" id="sl-heat" min="5" max="60" step="1" value="30">
+        </div>
+        
+        <button id="btn-fire" onclick="firePhoton()">Fire Photon</button>
+
+        <h3>Energy Tracker (Conserved)</h3>
+        <div class="readout">
+            <div>Incoming Energy (Total): <span id="out-in" style="color:#9b59b6;">0.00 eV</span></div>
+            <div>Internal Heat (Lost): <span id="out-heat" style="color:#e67e22;">0.00 eV</span></div>
+            <div>Emitted Photon (Out): <span id="out-out" style="color:#2ecc71;">0.00 eV</span></div>
+            <div class="total-energy">Total Output Check: <span id="out-check">0.00 eV</span></div>
+        </div>
+
+        <h3>Wavelength Output</h3>
+        <div class="readout" style="margin-top: -5px;">
+            <div>Emitted Color: <span id="out-wave-out" style="color:#fff;">--- nm</span></div>
+        </div>
+
+        <div class="energy-bars">
+            <div class="bar-container">
+                <div class="bar" id="bar-in" style="width: 100%;"></div>
+                <div class="bar-label">Incoming Photon Energy</div>
+            </div>
+            <div class="bar-container">
+                <div class="bar" id="bar-heat"></div>
+                <div class="bar-label">Vibrational Heat (Internal)</div>
+            </div>
+            <div class="bar-container">
+                <div class="bar" id="bar-out"></div>
+                <div class="bar-label">Emitted Photon Energy</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const jCanvas = document.getElementById('jablonskiCanvas');
+    const jCtx = jCanvas.getContext('2d');
+
+    // UI Elements
+    const slWaveIn = document.getElementById('sl-wave-in');
+    const slHeat = document.getElementById('sl-heat');
+    const btnFire = document.getElementById('btn-fire');
+
+    const outIn = document.getElementById('out-in');
+    const outHeat = document.getElementById('out-heat');
+    const outOut = document.getElementById('out-out');
+    const outCheck = document.getElementById('out-check');
+    const outWaveOut = document.getElementById('out-wave-out');
+
+    const barIn = document.getElementById('bar-in');
+    const barHeat = document.getElementById('bar-heat');
+    const barOut = document.getElementById('bar-out');
+
+    // Physics Constants
+    const HC = 1240; // Planck's constant * speed of light (eV * nm)
+
+    let state = {
+        phase: 0, // 0: Idle, 1: Incoming, 2: Jiggling (Heat), 3: Outgoing
+        time: 0,
+        energyIn: 0,
+        energyHeat: 0,
+        energyOut: 0,
+        waveIn: 0,
+        waveOut: 0,
+        xPhotonIn: 0,
+        xPhotonOut: 0,
+        jElectronY: 0, // For Jablonski diagram
+        jTargetY: 0,
+        dyeJiggle: 0
+    };
+
+    // Wavelength to RGB approximation for visual vibes
+    function waveToRGB(Wavelength) {
+        let R, G, B, alpha;
+        if (Wavelength >= 200 && Wavelength < 380) { // UV representation
+            let intensity = (Wavelength - 200) / 180;
+            return `rgba(150, 0, 255, ${0.4 + intensity * 0.6})`;
+        } else if (Wavelength >= 380 && Wavelength < 440) {
+            R = -(Wavelength - 440) / (440 - 380); G = 0.0; B = 1.0;
+        } else if (Wavelength >= 440 && Wavelength < 490) {
+            R = 0.0; G = (Wavelength - 440) / (490 - 440); B = 1.0;
+        } else if (Wavelength >= 490 && Wavelength < 510) {
+            R = 0.0; G = 1.0; B = -(Wavelength - 510) / (510 - 490);
+        } else if (Wavelength >= 510 && Wavelength < 580) {
+            R = (Wavelength - 510) / (580 - 510); G = 1.0; B = 0.0;
+        } else if (Wavelength >= 580 && Wavelength < 645) {
+            R = 1.0; G = -(Wavelength - 645) / (645 - 580); B = 0.0;
+        } else if (Wavelength >= 645 && Wavelength <= 780) {
+            R = 1.0; G = 0.0; B = 0.0;
+        } else {
+            R = 0.5; G = 0.0; B = 0.0; // IR representation
+        }
+        return `rgb(${Math.round(R * 255)}, ${Math.round(G * 255)}, ${Math.round(B * 255)})`;
+    }
+
+    function calculatePhysics() {
+        const waveIn_nm = parseFloat(slWaveIn.value);
+        const heatLossPct = parseFloat(slHeat.value) / 100;
+
+        // E = hc / lambda
+        state.waveIn = waveIn_nm;
+        state.energyIn = HC / state.waveIn;
+        
+        // Strict Algebraic Energy Locking
+        state.energyHeat = state.energyIn * heatLossPct;
+        state.energyOut = state.energyIn - state.energyHeat; // PERFECTLY conserved
+        
+        // Lambda = hc / E
+        state.waveOut = HC / state.energyOut;
+
+        // UI Updates
+        document.getElementById('val-wave-in').innerHTML = `${waveIn_nm} nm <span class="color-preview" style="background:${waveToRGB(waveIn_nm)}"></span>`;
+        document.getElementById('val-heat').innerText = slHeat.value + "%";
+
+        if (state.phase === 0) {
+            updateTelemetry();
+        }
+    }
+
+    function updateTelemetry() {
+        let eIn = parseFloat(state.energyIn.toFixed(2));
+        let eHeat = parseFloat(state.energyHeat.toFixed(2));
+        let eOut = parseFloat(state.energyOut.toFixed(2));
+        
+        // Force strings to absorb any JS float rounding so they add up perfectly for the teacher
+        let totalOut = parseFloat((eHeat + eOut).toFixed(2)); 
+
+        outIn.innerText = eIn.toFixed(2) + " eV";
+        outHeat.innerText = eHeat.toFixed(2) + " eV";
+        outOut.innerText = eOut.toFixed(2) + " eV";
+        outCheck.innerText = totalOut.toFixed(2) + " eV";
+
+        let colorOut = waveToRGB(state.waveOut);
+        outWaveOut.innerHTML = `${state.waveOut.toFixed(0)} nm <span class="color-preview" style="background:${colorOut}"></span>`;
+        outWaveOut.style.color = colorOut;
+
+        barIn.style.width = "100%";
+        barHeat.style.width = ((eHeat / eIn) * 100) + "%";
+        barOut.style.width = ((eOut / eIn) * 100) + "%";
+        barOut.style.backgroundColor = colorOut;
+    }
+
+    [slWaveIn, slHeat].forEach(el => {
+        el.addEventListener('input', () => {
+            if (state.phase === 0) calculatePhysics();
+        });
+    });
+
+    function firePhoton() {
+        if (state.phase !== 0) return;
+        calculatePhysics();
+        updateTelemetry();
+        
+        state.phase = 1;
+        state.xPhotonIn = 0;
+        state.xPhotonOut = canvas.width / 2;
+        state.time = 0;
+        state.jElectronY = 250; // Ground state S0
+        state.dyeJiggle = 0;
+        btnFire.disabled = true;
+    }
+
+    // Drawing helper for photons (sine wave)
+    function drawPhoton(ctx, xCenter, yCenter, wavelength, color) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        const amplitude = 15;
+        // Frequency is inversely proportional to wavelength visually
+        const frequency = 50 / wavelength; 
+        
+        for (let x = -30; x <= 30; x++) {
+            let y = Math.sin((x - state.time * 200) * frequency) * amplitude;
+            if (x === -30) ctx.moveTo(xCenter + x, yCenter + y);
+            else ctx.lineTo(xCenter + x, yCenter + y);
+        }
+        ctx.stroke();
+    }
+
+    function loop(timestamp) {
+        let dt = 0.016; 
+        state.time += dt;
+
+        // ----------------------------------------------------
+        // LOGIC PHASE MACHINE
+        // ----------------------------------------------------
+        const moleculeX = canvas.width / 2;
+        const jS0_Y = 250; // Jablonski Ground State
+        const jS1_Y = jS0_Y - (state.energyIn * 40); // Excited State
+        const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); // Vibrational drop
+
+        if (state.phase === 1) { // Incoming
+            state.xPhotonIn += 300 * dt;
+            if (state.xPhotonIn >= moleculeX) {
+                state.phase = 2;
+                state.time = 0;
+                state.jElectronY = jS1_Y; // Instant jump
+            }
+        } else if (state.phase === 2) { // Vibrational Relaxation (Heat)
+            state.dyeJiggle = Math.sin(state.time * 50) * 5; // Shake molecule
+            
+            // Slowly step down the Jablonski vibrational "stairs"
+            if (state.jElectronY < jS1_Relaxed_Y) {
+                state.jElectronY += 30 * dt;
+            }
+
+            if (state.time > 1.5) { // Hold for drama
+                state.phase = 3;
+                state.dyeJiggle = 0;
+                state.jElectronY = jS0_Y; // Drop back to ground
+            }
+        } else if (state.phase === 3) { // Emission
+            state.xPhotonOut += 300 * dt;
+            if (state.xPhotonOut > canvas.width + 50) {
+                state.phase = 0;
+                btnFire.disabled = false;
+            }
+        }
+
+        // ----------------------------------------------------
+        // RENDER PHYSICAL SPACE (LEFT CANVAS)
+        // ----------------------------------------------------
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Flashlight
+        ctx.fillStyle = '#555';
+        ctx.fillRect(10, 140, 40, 20);
+        ctx.fillStyle = '#888';
+        ctx.fillRect(50, 135, 10, 30);
+
+        // Dye Molecule
+        ctx.beginPath();
+        ctx.arc(moleculeX + state.dyeJiggle, 150, 25, 0, Math.PI * 2);
+        
+        if (state.phase === 2) {
+            ctx.fillStyle = '#e67e22'; // Hot
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#e67e22';
+        } else {
+            ctx.fillStyle = '#2c3e50'; // Cold
+            ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0; // reset
+        
+        ctx.strokeStyle = '#7f8c8d';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw Photons
+        if (state.phase === 1) {
+            drawPhoton(ctx, state.xPhotonIn, 150, state.waveIn, waveToRGB(state.waveIn));
+        } else if (state.phase === 3) {
+            drawPhoton(ctx, state.xPhotonOut, 150, state.waveOut, waveToRGB(state.waveOut));
+        }
+
+        // Heat waves
+        if (state.phase === 2) {
+            ctx.strokeStyle = `rgba(230, 126, 34, ${1 - (state.time/1.5)})`;
+            ctx.beginPath();
+            ctx.arc(moleculeX + state.dyeJiggle, 150, 25 + state.time * 30, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // ----------------------------------------------------
+        // RENDER JABLONSKI DIAGRAM (CENTER CANVAS)
+        // ----------------------------------------------------
+        jCtx.fillStyle = '#1a1a1a';
+        jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
+
+        // Ground State (S0)
+        jCtx.strokeStyle = '#fff';
+        jCtx.lineWidth = 3;
+        jCtx.beginPath(); jCtx.moveTo(50, jS0_Y); jCtx.lineTo(400, jS0_Y); jCtx.stroke();
+        jCtx.fillStyle = '#fff'; jCtx.font = "14px sans-serif";
+        jCtx.fillText("Ground State (S0)", 50, jS0_Y + 20);
+
+        // Excited State (S1) Top
+        jCtx.strokeStyle = '#aaa';
+        jCtx.beginPath(); jCtx.moveTo(50, jS1_Y); jCtx.lineTo(250, jS1_Y); jCtx.stroke();
+        jCtx.fillText("Excited State (S1)", 50, jS1_Y - 10);
+
+        // Vibrational Levels (The stairs)
+        jCtx.lineWidth = 1;
+        jCtx.setLineDash([5, 5]);
+        for(let v = 1; v <= 5; v++) {
+            let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
+            if(vy <= jS1_Relaxed_Y) {
+                jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(350, vy); jCtx.stroke();
+            }
+        }
+        jCtx.setLineDash([]);
+        
+        // Relaxed S1 Level
+        jCtx.lineWidth = 3;
+        jCtx.strokeStyle = '#2ecc71';
+        jCtx.beginPath(); jCtx.moveTo(150, jS1_Relaxed_Y); jCtx.lineTo(400, jS1_Relaxed_Y); jCtx.stroke();
+
+        // Draw Electron
+        let eX = 100;
+        if (state.phase === 2) eX = 200; // Shift right during heat loss
+        if (state.phase === 3) eX = 300; // Shift right for drop
+        
+        jCtx.beginPath();
+        jCtx.arc(eX, state.phase === 0 ? jS0_Y : state.jElectronY, 8, 0, Math.PI * 2);
+        jCtx.fillStyle = '#3498db';
+        jCtx.fill();
+        jCtx.strokeStyle = '#fff';
+        jCtx.stroke();
+
+        // Draw Energy Arrows
+        if (state.phase === 1) { // Absorption Arrow
+            jCtx.strokeStyle = waveToRGB(state.waveIn);
+            jCtx.setLineDash([]);
+            drawArrow(jCtx, 100, jS0_Y, 100, jS1_Y);
+        } else if (state.phase === 2) { // Heat Arrow
+            jCtx.strokeStyle = '#e67e22';
+            drawArrow(jCtx, 200, jS1_Y, 200, state.jElectronY);
+        } else if (state.phase === 3) { // Emission Arrow
+            jCtx.strokeStyle = waveToRGB(state.waveOut);
+            drawArrow(jCtx, 300, jS1_Relaxed_Y, 300, jS0_Y);
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    function drawArrow(ctx, fromx, fromy, tox, toy) {
+        var headlen = 10; 
+        var dx = tox - fromx;
+        var dy = toy - fromy;
+        var angle = Math.atan2(dy, dx);
+        ctx.beginPath();
+        ctx.moveTo(fromx, fromy);
+        ctx.lineTo(tox, toy);
+        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(tox, toy);
+        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+    }
+
+    calculatePhysics();
+    requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
