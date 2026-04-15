@@ -3,264 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluorescence & Stokes Shift Simulation</title>
+    <title>Advanced Fluorescence Dynamics</title>
     <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-panel: #1e293b;
+            --text-main: #e2e8f0;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e1e;
-            color: #f0f0f0;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
-            padding: 20px;
+            padding: 30px 20px;
             margin: 0;
+            line-height: 1.5;
         }
+
         .container {
             display: flex;
+            gap: 25px;
+            max-width: 1500px;
+            width: 100%;
+        }
+
+        .canvas-col {
+            display: flex;
+            flex-direction: column;
             gap: 20px;
-            max-width: 1400px;
+            flex: 1;
         }
-        .left-col {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+
+        .canvas-wrapper {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .center-col {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 500px;
-        }
+
         canvas {
             background-color: #000;
-            border: 2px solid #444;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        .panel {
-            background-color: #2d2d2d;
-            padding: 20px;
-            border-radius: 8px;
-            width: 350px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .control-group label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-            color: #aaa;
-        }
-        input[type="range"] {
             width: 100%;
+            display: block;
         }
-        select {
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 8px;
-            border-radius: 5px;
-            font-family: inherit;
-            cursor: pointer;
-        }
-        select:focus {
-            outline: none;
-            border-color: #9b59b6;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9em;
-            color: #aaa;
-            background: #1a1a1a;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        input[type="checkbox"] {
-            transform: scale(1.2);
-            cursor: pointer;
-        }
-        .readout {
-            background-color: #1a1a1a;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-        }
-        .readout div {
-            display: flex;
-            justify-content: space-between;
-        }
-        .readout span {
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        .total-energy {
-            border-top: 1px solid #444;
-            padding-top: 8px;
-            margin-top: 5px;
-            color: #2ecc71;
-        }
-        .status-box {
-            background-color: #2c3e50;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.9em;
-            letter-spacing: 1px;
-        }
-        .energy-bars {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 5px;
-        }
-        .bar-container {
-            width: 100%;
-            height: 20px;
-            background-color: #444;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-        }
-        .bar {
-            height: 100%;
-            width: 0%;
-            transition: width 0.1s linear, background-color 0.2s;
-        }
-        #bar-in { background-color: #9b59b6; }
-        #bar-heat { background-color: #e67e22; }
-        #bar-out { background-color: #2ecc71; }
-        .bar-label {
-            position: absolute;
-            top: 0;
-            left: 5px;
-            font-size: 0.8em;
-            line-height: 20px;
-            text-shadow: 1px 1px 2px black;
-        }
+
         .graph-header {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             display: flex;
             justify-content: space-between;
-            font-size: 0.8em;
-            color: #aaa;
-            margin-bottom: -10px;
-            margin-top: 5px;
         }
-        button {
-            background-color: #9b59b6;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            transition: background 0.2s;
+
+        .panel {
+            background-color: var(--bg-panel);
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        button:hover { background-color: #8e44ad; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
+
+        h3 { margin: 0; color: #fff; font-size: 1.2em; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
         
-        .color-preview {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            vertical-align: middle;
-            margin-left: 5px;
-            border: 1px solid #fff;
+        .control-group label {
+            display: flex; justify-content: space-between;
+            font-size: 0.85em; font-weight: 500; color: #cbd5e1;
         }
+
+        input[type="range"] {
+            width: 100%; accent-color: var(--accent); cursor: pointer;
+        }
+
+        select {
+            background-color: #0f172a; color: #fff; border: 1px solid var(--border);
+            padding: 10px; border-radius: 6px; font-family: inherit; cursor: pointer;
+            width: 100%; transition: border-color 0.2s;
+        }
+        select:focus { outline: none; border-color: var(--accent); }
+
+        .checkbox-group {
+            display: flex; align-items: center; gap: 10px;
+            background: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid var(--border);
+        }
+        
+        button {
+            background-color: var(--accent); color: white; border: none;
+            padding: 14px; border-radius: 6px; cursor: pointer;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+        button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .status-box {
+            background-color: #0f172a; border: 1px solid var(--border); padding: 12px;
+            border-radius: 6px; text-align: center; font-weight: bold;
+            font-size: 0.85em; letter-spacing: 1px; transition: background-color 0.3s;
+        }
+
+        .readout {
+            background-color: #0f172a; padding: 15px; border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em;
+            display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border);
+        }
+        .readout div { display: flex; justify-content: space-between; align-items: center; }
+        .readout span { font-size: 1.1em; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
+
+        .color-preview {
+            display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 8px currentColor;
+        }
+
+        .bar-container { width: 100%; height: 24px; background-color: #0f172a; border-radius: 4px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+        .bar { height: 100%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bar-label { position: absolute; top: 0; left: 8px; font-size: 0.75em; font-weight: bold; line-height: 24px; text-shadow: 1px 1px 2px #000; z-index: 2; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="left-col">
-        <div class="graph-header">
-            <span>Physical Space (Fluorescence)</span>
+    <div class="canvas-col">
+        <div class="canvas-wrapper">
+            <div class="graph-header"><span>Physical Space (Fluorescence)</span></div>
+            <canvas id="simCanvas" width="600" height="300"></canvas>
         </div>
-        <canvas id="simCanvas" width="450" height="300"></canvas>
-    </div>
-
-    <div class="center-col">
-        <div class="graph-header">
-            <span>Jablonski Energy Diagram</span>
+        <div class="canvas-wrapper">
+            <div class="graph-header"><span>Jablonski Energy Diagram</span></div>
+            <canvas id="jablonskiCanvas" width="600" height="350"></canvas>
         </div>
-        <canvas id="jablonskiCanvas" width="450" height="300"></canvas>
     </div>
 
     <div class="panel">
-        <h3>Laser & Dye Parameters</h3>
+        <h3>Simulation Parameters</h3>
 
         <div class="control-group">
-            <label>Dye Molecule Preset</label>
+            <label>Fluorophore Preset</label>
             <select id="sel-dye">
-                <option value="custom">Custom (Use Sliders)</option>
-                <option value="fluorescein">Fluorescein (Blue to Green)</option>
-                <option value="rhodamine">Rhodamine 6G (Green to Yellow)</option>
-                <option value="dapi">DAPI (UV to Blue)</option>
+                <option value="custom">Custom Parameters</option>
+                <option value="fluorescein">Fluorescein (FITC)</option>
+                <option value="rhodamine">Rhodamine 6G</option>
+                <option value="dapi">DAPI</option>
+                <option value="gfp">Green Fluorescent Protein (GFP)</option>
+                <option value="texas_red">Texas Red</option>
+                <option value="cy5">Cyanine 5 (Cy5)</option>
+                <option value="quinine">Quinine (Tonic Water)</option>
             </select>
         </div>
         
         <div class="control-group">
-            <label>Incoming Laser (λ) <span id="val-wave-in">350 nm</span></label>
-            <input type="range" id="sl-wave-in" min="200" max="700" step="5" value="350">
+            <label>Excitation Wavelength (λ) <span id="val-wave-in" style="display:flex; align-items:center; gap:6px;">350 nm</span></label>
+            <input type="range" id="sl-wave-in" min="200" max="700" step="1" value="350">
         </div>
 
         <div class="control-group">
-            <label>Vibrational Energy Loss <span id="val-heat">30%</span></label>
-            <input type="range" id="sl-heat" min="5" max="60" step="1" value="30">
+            <label>Stokes Shift (Energy Loss) <span id="val-heat">30%</span></label>
+            <input type="range" id="sl-heat" min="1" max="60" step="1" value="30">
         </div>
 
         <div class="control-group">
-            <label>Quantum Yield (Success Rate) <span id="val-qy">80%</span></label>
-            <input type="range" id="sl-qy" min="0" max="100" step="5" value="80">
+            <label>Quantum Yield (Efficiency) <span id="val-qy">80%</span></label>
+            <input type="range" id="sl-qy" min="0" max="100" step="1" value="80">
         </div>
 
         <div class="checkbox-group">
             <input type="checkbox" id="chk-iso" checked>
-            <label for="chk-iso" style="margin:0; cursor:pointer;">Isotropic Emission (360° Scatter)</label>
+            <label for="chk-iso" style="margin:0; cursor:pointer; color:#fff;">Isotropic Emission (360°)</label>
         </div>
         
         <button id="btn-fire" onclick="firePhoton()">Fire Photon</button>
 
-        <div class="status-box" id="status-display">STATUS: IDLE</div>
+        <div class="status-box" id="status-display">SYSTEM IDLE</div>
 
-        <h3>Energy Tracker (Conserved)</h3>
+        <h3>Energy Conservation Tracker</h3>
         <div class="readout">
-            <div>Incoming Energy: <span id="out-in" style="color:#9b59b6;">0.00 eV</span></div>
-            <div>Internal Heat (Lost): <span id="out-heat" style="color:#e67e22;">0.00 eV</span></div>
-            <div>Emitted Photon: <span id="out-out" style="color:#2ecc71;">0.00 eV</span></div>
-            <div class="total-energy">Total Output Check: <span id="out-check">0.00 eV</span></div>
+            <div>Incoming Energy (E = hc/λ): <span id="out-in" style="color:#a78bfa;">0.00 eV</span></div>
+            <div>Vibrational Relaxation: <span id="out-heat" style="color:#fb923c;">0.00 eV</span></div>
+            <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+                Emitted Photon: <span id="out-out" style="color:#34d399;">0.00 eV</span>
+            </div>
+            <div>Emission Wavelength: <span id="out-wave-out" style="display:flex; align-items:center; gap:6px;">--- nm</span></div>
         </div>
 
-        <h3>Wavelength Output</h3>
-        <div class="readout" style="margin-top: -5px;">
-            <div>Emitted Color: <span id="out-wave-out" style="color:#fff;">--- nm</span></div>
-        </div>
-
-        <div class="energy-bars">
+        <div class="control-group" style="gap: 12px; margin-top: 5px;">
             <div class="bar-container">
-                <div class="bar" id="bar-in" style="width: 100%;"></div>
-                <div class="bar-label">Incoming Photon Energy</div>
+                <div class="bar" id="bar-in" style="width: 100%; background: linear-gradient(90deg, #6d28d9, #a78bfa);"></div>
+                <div class="bar-label">Excitation Energy</div>
             </div>
             <div class="bar-container">
-                <div class="bar" id="bar-heat"></div>
-                <div class="bar-label">Vibrational Heat (Internal)</div>
+                <div class="bar" id="bar-heat" style="background: linear-gradient(90deg, #ea580c, #fb923c);"></div>
+                <div class="bar-label">Thermal Loss</div>
             </div>
             <div class="bar-container">
-                <div class="bar" id="bar-out"></div>
-                <div class="bar-label">Emitted Photon Energy</div>
+                <div class="bar" id="bar-out" style="background: linear-gradient(90deg, #059669, #34d399);"></div>
+                <div class="bar-label">Emission Energy</div>
             </div>
         </div>
     </div>
@@ -269,184 +223,152 @@
 <script>
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
-    
     const jCanvas = document.getElementById('jablonskiCanvas');
     const jCtx = jCanvas.getContext('2d');
 
-    const selDye = document.getElementById('sel-dye');
-    const slWaveIn = document.getElementById('sl-wave-in');
-    const slHeat = document.getElementById('sl-heat');
-    const slQY = document.getElementById('sl-qy');
-    const chkIso = document.getElementById('chk-iso');
-    const btnFire = document.getElementById('btn-fire');
-    const statusDisplay = document.getElementById('status-display');
-
-    const outIn = document.getElementById('out-in');
-    const outHeat = document.getElementById('out-heat');
-    const outOut = document.getElementById('out-out');
-    const outCheck = document.getElementById('out-check');
-    const outWaveOut = document.getElementById('out-wave-out');
-
-    const barIn = document.getElementById('bar-in');
-    const barHeat = document.getElementById('bar-heat');
-    const barOut = document.getElementById('bar-out');
+    const elements = {
+        selDye: document.getElementById('sel-dye'),
+        slWaveIn: document.getElementById('sl-wave-in'),
+        slHeat: document.getElementById('sl-heat'),
+        slQY: document.getElementById('sl-qy'),
+        chkIso: document.getElementById('chk-iso'),
+        btnFire: document.getElementById('btn-fire'),
+        statusDisplay: document.getElementById('status-display'),
+        outIn: document.getElementById('out-in'),
+        outHeat: document.getElementById('out-heat'),
+        outOut: document.getElementById('out-out'),
+        outWaveOut: document.getElementById('out-wave-out'),
+        barIn: document.getElementById('bar-in'),
+        barHeat: document.getElementById('bar-heat'),
+        barOut: document.getElementById('bar-out')
+    };
 
     const HC = 1240; 
+    let particles = []; // Particle engine for heat loss
 
     const dyePresets = {
         'fluorescein': { wave: 490, heat: 5, qy: 90 },
         'rhodamine': { wave: 530, heat: 6, qy: 95 },
-        'dapi': { wave: 350, heat: 25, qy: 50 }
+        'dapi': { wave: 350, heat: 25, qy: 50 },
+        'gfp': { wave: 488, heat: 4, qy: 80 },
+        'texas_red': { wave: 595, heat: 3, qy: 51 },
+        'cy5': { wave: 650, heat: 3, qy: 27 },
+        'quinine': { wave: 350, heat: 24, qy: 55 }
     };
 
     let state = {
-        phase: 0, 
-        time: 0,
-        energyIn: 0,
-        energyHeat: 0,
-        energyOut: 0,
-        waveIn: 0,
-        waveOut: 0,
-        photonDistance: 0, 
-        outAngle: 0, 
-        isDud: false, 
-        jElectronX: 100, // Tracks the ball's X coordinate horizontally 
-        jElectronY: 250, // Tracks the ball's Y coordinate vertically
-        dyeJiggle: 0,
-        holdTime: 0         
+        phase: 0, time: 0,
+        energyIn: 0, energyHeat: 0, energyOut: 0,
+        waveIn: 0, waveOut: 0,
+        photonDistance: 0, outAngle: 0, isDud: false, 
+        jElectronX: 120, jElectronY: 280, dyeJiggle: 0, holdTime: 0         
     };
 
-    function waveToRGB(Wavelength) {
+    function waveToRGB(W) {
         let R, G, B;
-        if (Wavelength >= 200 && Wavelength < 380) { 
-            let intensity = (Wavelength - 200) / 180;
-            return `rgba(150, 0, 255, ${0.4 + intensity * 0.6})`;
-        } else if (Wavelength >= 380 && Wavelength < 440) {
-            R = -(Wavelength - 440) / (440 - 380); G = 0.0; B = 1.0;
-        } else if (Wavelength >= 440 && Wavelength < 490) {
-            R = 0.0; G = (Wavelength - 440) / (490 - 440); B = 1.0;
-        } else if (Wavelength >= 490 && Wavelength < 510) {
-            R = 0.0; G = 1.0; B = -(Wavelength - 510) / (510 - 490);
-        } else if (Wavelength >= 510 && Wavelength < 580) {
-            R = (Wavelength - 510) / (580 - 510); G = 1.0; B = 0.0;
-        } else if (Wavelength >= 580 && Wavelength < 645) {
-            R = 1.0; G = -(Wavelength - 645) / (645 - 580); B = 0.0;
-        } else if (Wavelength >= 645 && Wavelength <= 780) {
-            R = 1.0; G = 0.0; B = 0.0;
-        } else {
-            R = 0.5; G = 0.0; B = 0.0; 
-        }
+        if (W >= 200 && W < 380) { let i = (W-200)/180; return `rgb(${Math.round(150*i)}, 0, 255)`; }
+        else if (W >= 380 && W < 440) { R = -(W - 440) / 60; G = 0.0; B = 1.0; }
+        else if (W >= 440 && W < 490) { R = 0.0; G = (W - 440) / 50; B = 1.0; }
+        else if (W >= 490 && W < 510) { R = 0.0; G = 1.0; B = -(W - 510) / 20; }
+        else if (W >= 510 && W < 580) { R = (W - 510) / 70; G = 1.0; B = 0.0; }
+        else if (W >= 580 && W < 645) { R = 1.0; G = -(W - 645) / 65; B = 0.0; }
+        else if (W >= 645 && W <= 780) { R = 1.0; G = 0.0; B = 0.0; }
+        else { R = 0.5; G = 0.0; B = 0.0; }
         return `rgb(${Math.round(R * 255)}, ${Math.round(G * 255)}, ${Math.round(B * 255)})`;
     }
 
     function calculatePhysics(forceDudOverride = false) {
-        const waveIn_nm = parseFloat(slWaveIn.value);
-        const heatLossPct = parseFloat(slHeat.value) / 100;
-
-        state.waveIn = waveIn_nm;
+        state.waveIn = parseFloat(elements.slWaveIn.value);
         state.energyIn = HC / state.waveIn;
+        const heatLossPct = parseFloat(elements.slHeat.value) / 100;
         
         if (forceDudOverride) {
             state.energyHeat = state.energyIn;
-            state.energyOut = 0;
-            state.waveOut = 0; 
+            state.energyOut = 0; state.waveOut = 0; 
         } else {
             state.energyHeat = state.energyIn * heatLossPct;
             state.energyOut = state.energyIn - state.energyHeat; 
             state.waveOut = HC / state.energyOut;
         }
 
-        document.getElementById('val-wave-in').innerHTML = `${waveIn_nm} nm <span class="color-preview" style="background:${waveToRGB(waveIn_nm)}"></span>`;
-        document.getElementById('val-heat').innerText = slHeat.value + "%";
-        document.getElementById('val-qy').innerText = slQY.value + "%";
-
+        const colorIn = waveToRGB(state.waveIn);
+        document.getElementById('val-wave-in').innerHTML = `${state.waveIn} nm <span class="color-preview" style="background:${colorIn}; color:${colorIn}"></span>`;
+        document.getElementById('val-heat').innerText = elements.slHeat.value + "%";
+        document.getElementById('val-qy').innerText = elements.slQY.value + "%";
         updateTelemetry();
     }
 
     function updateTelemetry() {
-        let eIn = parseFloat(state.energyIn.toFixed(2));
-        let eHeat = parseFloat(state.energyHeat.toFixed(2));
-        let eOut = parseFloat(state.energyOut.toFixed(2));
-        let totalOut = parseFloat((eHeat + eOut).toFixed(2)); 
-
-        outIn.innerText = eIn.toFixed(2) + " eV";
-        outHeat.innerText = eHeat.toFixed(2) + " eV";
-        outOut.innerText = eOut.toFixed(2) + " eV";
-        outCheck.innerText = totalOut.toFixed(2) + " eV";
+        elements.outIn.innerText = state.energyIn.toFixed(2) + " eV";
+        elements.outHeat.innerText = state.energyHeat.toFixed(2) + " eV";
+        elements.outOut.innerText = state.energyOut.toFixed(2) + " eV";
 
         if (state.energyOut === 0) {
-            outWaveOut.innerHTML = `NONE (Dud) <span class="color-preview" style="background:#000"></span>`;
-            outWaveOut.style.color = "#888";
-            barOut.style.backgroundColor = "#444";
+            elements.outWaveOut.innerHTML = `NONE (Heat Only) <span class="color-preview" style="background:#222; border-color:#555"></span>`;
+            elements.outWaveOut.style.color = "#64748b";
         } else {
             let colorOut = waveToRGB(state.waveOut);
-            outWaveOut.innerHTML = `${state.waveOut.toFixed(0)} nm <span class="color-preview" style="background:${colorOut}"></span>`;
-            outWaveOut.style.color = colorOut;
-            barOut.style.backgroundColor = colorOut;
+            elements.outWaveOut.innerHTML = `${state.waveOut.toFixed(0)} nm <span class="color-preview" style="background:${colorOut}; color:${colorOut}"></span>`;
+            elements.outWaveOut.style.color = colorOut;
         }
 
-        barIn.style.width = "100%";
-        barHeat.style.width = ((eHeat / eIn) * 100) + "%";
-        barOut.style.width = ((eOut / eIn) * 100) + "%";
+        elements.barHeat.style.width = ((state.energyHeat / state.energyIn) * 100) + "%";
+        elements.barOut.style.width = ((state.energyOut / state.energyIn) * 100) + "%";
     }
 
-    selDye.addEventListener('change', (e) => {
+    // Event Listeners
+    elements.selDye.addEventListener('change', (e) => {
         if (e.target.value !== 'custom') {
-            const preset = dyePresets[e.target.value];
-            slWaveIn.value = preset.wave;
-            slHeat.value = preset.heat;
-            slQY.value = preset.qy;
+            const p = dyePresets[e.target.value];
+            elements.slWaveIn.value = p.wave; elements.slHeat.value = p.heat; elements.slQY.value = p.qy;
             calculatePhysics(false);
         }
     });
 
-    [slWaveIn, slHeat, slQY].forEach(el => {
-        el.addEventListener('input', () => {
-            selDye.value = 'custom';
-            if (state.phase === 0) calculatePhysics(false); 
-        });
+    [elements.slWaveIn, elements.slHeat, elements.slQY].forEach(el => {
+        el.addEventListener('input', () => { elements.selDye.value = 'custom'; if (state.phase === 0) calculatePhysics(false); });
     });
 
     function firePhoton() {
         if (state.phase !== 0) return;
-        
-        const qyChance = parseFloat(slQY.value) / 100;
-        state.isDud = Math.random() > qyChance;
-        
-        if (chkIso.checked) state.outAngle = Math.random() * Math.PI * 2; 
-        else state.outAngle = 0; 
-
+        state.isDud = Math.random() > (parseFloat(elements.slQY.value) / 100);
+        state.outAngle = elements.chkIso.checked ? Math.random() * Math.PI * 2 : 0; 
         calculatePhysics(false); 
-        statusDisplay.innerText = "STATUS: PHOTON INCOMING";
-        statusDisplay.style.backgroundColor = "#8e44ad";
         
-        state.phase = 1;
-        state.photonDistance = -200; 
-        state.time = 0;
-        state.jElectronX = 100;
-        state.jElectronY = 250; 
-        state.dyeJiggle = 0;
-        btnFire.disabled = true;
+        elements.statusDisplay.innerText = "EXCITATION IN PROGRESS";
+        elements.statusDisplay.style.backgroundColor = "#4c1d95";
+        elements.statusDisplay.style.color = "#c4b5fd";
+        
+        state.phase = 1; state.photonDistance = -300; state.time = 0;
+        state.jElectronX = 120; state.jElectronY = 280; state.dyeJiggle = 0;
+        elements.btnFire.disabled = true;
+        particles = []; // clear particles
     }
 
-    function drawPhoton(ctx, xCenter, yCenter, distance, angle, wavelength, color) {
-        ctx.save();
-        ctx.translate(xCenter, yCenter);
-        ctx.rotate(angle);
-        
+    function spawnHeatParticle(x, y) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 150,
+            vy: (Math.random() - 0.5) * 150,
+            life: 1.0,
+            size: Math.random() * 3 + 2
+        });
+    }
+
+    function drawPhoton(ctx, xC, yC, dist, angle, wave, color) {
+        ctx.save(); ctx.translate(xC, yC); ctx.rotate(angle);
         ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
-        const amplitude = 15;
-        const frequency = 50 / wavelength; 
+        ctx.shadowBlur = 15; ctx.shadowColor = color;
+        ctx.strokeStyle = color; ctx.lineWidth = 4;
         
-        for (let x = -30; x <= 30; x++) {
-            let y = Math.sin((x - state.time * 200) * frequency) * amplitude;
-            if (x === -30) ctx.moveTo(distance + x, y);
-            else ctx.lineTo(distance + x, y);
+        const freq = 40 / wave; 
+        for (let x = -40; x <= 40; x += 2) {
+            let env = Math.exp(-(x*x)/400); // Gaussian envelope to make it look like a packet
+            let y = Math.sin((x - state.time * 300) * freq) * 15 * env;
+            if (x === -40) ctx.moveTo(dist + x, y);
+            else ctx.lineTo(dist + x, y);
         }
-        ctx.stroke();
-        ctx.restore();
+        ctx.stroke(); ctx.restore();
     }
 
     let lastTime = performance.now();
@@ -455,238 +377,197 @@
         let dt = (timestamp - lastTime) / 1000; 
         lastTime = timestamp;
         if (dt > 0.1) dt = 0.1; 
-
         state.time += dt;
 
-        const moleculeX = canvas.width / 2;
-        const moleculeY = 150;
-        
-        const jS0_Y = 250; 
+        const molX = canvas.width / 2; const molY = 150;
+        const jS0_Y = 280; 
         const jS1_Y = jS0_Y - (state.energyIn * 40); 
         const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); 
 
-        // ----- PHASE STATE ENGINE -----
-        
+        // ----- STATE MACHINE -----
         if (state.phase === 1) { 
-            // Photon travelling towards molecule
-            state.photonDistance += 300 * dt;
+            state.photonDistance += 400 * dt;
             if (state.photonDistance >= 0) {
-                state.phase = 1.5;
-                state.photonDistance = 0;
-                statusDisplay.innerText = "STATUS: ABSORPTION";
-                statusDisplay.style.backgroundColor = "#8e44ad";
+                state.phase = 1.5; state.photonDistance = 0;
             }
         } 
         else if (state.phase === 1.5) { 
-            // Instantaneous absorption: Ball slides UP the S0->S1 arrow
-            let jumpSpeed = (jS0_Y - jS1_Y) / 0.15; // 0.15s animation
-            state.jElectronY -= jumpSpeed * dt;
-            
+            state.jElectronY -= ((jS0_Y - jS1_Y) / 0.15) * dt;
             if (state.jElectronY <= jS1_Y) {
-                state.jElectronY = jS1_Y;
-                state.phase = 2;
-                state.holdTime = 0;
+                state.jElectronY = jS1_Y; state.phase = 2; state.holdTime = 0;
                 
                 if (state.isDud) {
                     calculatePhysics(true); 
-                    statusDisplay.innerText = "STATUS: NON-RADIATIVE DECAY (HEAT ONLY)";
-                    statusDisplay.style.backgroundColor = "#c0392b";
+                    elements.statusDisplay.innerText = "NON-RADIATIVE DECAY (HEAT LOSS)";
+                    elements.statusDisplay.style.backgroundColor = "#7f1d1d";
+                    elements.statusDisplay.style.color = "#fca5a5";
                 } else {
-                    statusDisplay.innerText = "STATUS: EXCITED (VIBRATING)";
-                    statusDisplay.style.backgroundColor = "#d35400";
+                    elements.statusDisplay.innerText = "VIBRATIONAL RELAXATION";
+                    elements.statusDisplay.style.backgroundColor = "#7c2d12";
+                    elements.statusDisplay.style.color = "#fdba74";
                 }
             }
         } 
         else if (state.phase === 2) { 
-            // Vibrational Relaxation: Ball drops diagonally
-            state.dyeJiggle = Math.sin(state.time * 50) * (state.isDud ? 10 : 5); 
+            state.dyeJiggle = Math.sin(state.time * 60) * (state.isDud ? 12 : 6); 
             
+            // Spawn particles during relaxation
+            if(Math.random() < (state.isDud ? 0.6 : 0.3)) spawnHeatParticle(molX + state.dyeJiggle, molY);
+            if(Math.random() < 0.2) spawnHeatParticle(state.jElectronX, state.jElectronY); // On diagram too!
+
             let targetY = state.isDud ? jS0_Y : jS1_Relaxed_Y;
-            let dropTime = 0.6; 
             
             if (state.jElectronY < targetY) {
-                state.jElectronY += ((targetY - jS1_Y) / dropTime) * dt;
+                state.jElectronY += ((targetY - jS1_Y) / 0.8) * dt;
                 if (state.jElectronY > targetY) state.jElectronY = targetY;
             } 
-            if (state.jElectronX < 200) {
-                state.jElectronX += (100 / dropTime) * dt;
-                if (state.jElectronX > 200) state.jElectronX = 200;
+            if (state.jElectronX < 250) {
+                state.jElectronX += (130 / 0.8) * dt;
             }
 
-            if (state.jElectronY === targetY && state.jElectronX === 200) {
+            if (state.jElectronY === targetY && state.jElectronX >= 250) {
                 state.holdTime += dt;
                 if (state.holdTime > 0.3) { 
-                    if (state.isDud) {
-                        state.phase = 4; // Skip straight to reset if dud
-                        state.dyeJiggle = 0;
-                    } else {
-                        state.phase = 2.5; // Proceed to green line
-                        state.dyeJiggle = 0;
-                    }
+                    state.phase = state.isDud ? 4 : 2.5; 
+                    state.dyeJiggle = 0;
                 }
             }
         } 
         else if (state.phase === 2.5) { 
-            // Traversing the green S1 Relaxed Line
-            state.jElectronX += (100 / 0.4) * dt;
-            
-            if (state.jElectronX >= 300) {
-                state.jElectronX = 300;
-                state.phase = 3;
-                state.photonDistance = 0;
-                statusDisplay.innerText = "STATUS: EMISSION!";
-                statusDisplay.style.backgroundColor = "#27ae60";
+            state.jElectronX += (200 / 0.4) * dt;
+            if (state.jElectronX >= 450) {
+                state.jElectronX = 450; state.phase = 3; state.photonDistance = 0;
+                elements.statusDisplay.innerText = "FLUORESCENCE EMISSION";
+                elements.statusDisplay.style.backgroundColor = "#064e3b";
+                elements.statusDisplay.style.color = "#6ee7b7";
             }
         } 
         else if (state.phase === 3) { 
-            // Emission: Ball drops straight down the emission arrow
-            state.photonDistance += 300 * dt;
-            
-            let dropSpeed3 = (jS0_Y - jS1_Relaxed_Y) / 0.35; 
+            state.photonDistance += 400 * dt;
             if (state.jElectronY < jS0_Y) {
-                state.jElectronY += dropSpeed3 * dt;
+                state.jElectronY += ((jS0_Y - jS1_Relaxed_Y) / 0.3) * dt;
                 if (state.jElectronY > jS0_Y) state.jElectronY = jS0_Y;
             }
-
-            if (state.photonDistance > 300 && state.jElectronY >= jS0_Y) { 
-                state.phase = 4;
-            }
+            if (state.photonDistance > 400 && state.jElectronY >= jS0_Y) state.phase = 4;
         } 
         else if (state.phase === 4) { 
-            // Invisible Reset Slide: Slides ball back to X=100
-            state.jElectronX -= 400 * dt;
-            if (state.jElectronX <= 100) {
-                state.jElectronX = 100;
-                state.phase = 0;
-                btnFire.disabled = false;
-                statusDisplay.innerText = "STATUS: IDLE";
-                statusDisplay.style.backgroundColor = "#2c3e50";
+            state.jElectronX -= 600 * dt;
+            if (state.jElectronX <= 120) {
+                state.jElectronX = 120; state.phase = 0; elements.btnFire.disabled = false;
+                elements.statusDisplay.innerText = "SYSTEM IDLE";
+                elements.statusDisplay.style.backgroundColor = "#0f172a";
+                elements.statusDisplay.style.color = "#e2e8f0";
                 if(state.isDud) calculatePhysics(false);
             }
         }
 
-        // ----- RENDER PHYSICAL SPACE (LEFT CANVAS) -----
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ----- UPDATE PARTICLES -----
+        particles.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt*1.5; });
+        particles = particles.filter(p => p.life > 0);
 
-        ctx.fillStyle = '#555';
-        ctx.fillRect(10, moleculeY - 10, 40, 20);
-        ctx.fillStyle = '#888';
-        ctx.fillRect(50, moleculeY - 15, 10, 30);
-
-        ctx.beginPath();
-        ctx.arc(moleculeX + state.dyeJiggle, moleculeY, 25, 0, Math.PI * 2);
+        // ----- RENDER LEFT CANVAS (Physical) -----
+        ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        let isExcited = (state.phase >= 1.5 && state.phase < 3);
-        if (isExcited) {
-            ctx.fillStyle = state.isDud ? '#c0392b' : '#e67e22'; 
-            ctx.shadowBlur = state.isDud ? 30 : 20;
-            ctx.shadowColor = state.isDud ? '#c0392b' : '#e67e22';
-        } else {
-            ctx.fillStyle = '#2c3e50'; 
-            ctx.shadowBlur = 0;
-        }
-        ctx.fill();
-        ctx.shadowBlur = 0; 
+        // Draw device
+        ctx.fillStyle = '#334155'; ctx.fillRect(20, molY - 15, 60, 30);
+        ctx.fillStyle = '#475569'; ctx.fillRect(80, molY - 5, 20, 10);
         
-        ctx.strokeStyle = '#7f8c8d';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        if (state.phase === 1) {
-            drawPhoton(ctx, moleculeX, moleculeY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
-        } else if (state.phase === 3) {
-            drawPhoton(ctx, moleculeX, moleculeY, state.photonDistance, state.outAngle, state.waveOut, waveToRGB(state.waveOut));
+        // Draw Molecule
+        ctx.beginPath(); ctx.arc(molX + state.dyeJiggle, molY, 30, 0, Math.PI * 2);
+        if (state.phase >= 1.5 && state.phase < 3) {
+            let g = ctx.createRadialGradient(molX+state.dyeJiggle, molY, 0, molX+state.dyeJiggle, molY, 40);
+            let glowCol = state.isDud ? '#dc2626' : '#ea580c';
+            g.addColorStop(0, glowCol); g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g; ctx.fill();
         }
+        ctx.fillStyle = '#1e293b'; ctx.fill();
+        ctx.strokeStyle = (state.phase >= 1.5 && state.phase < 3) ? '#f8fafc' : '#64748b';
+        ctx.lineWidth = 3; ctx.stroke();
 
-        if (state.phase === 2) {
-            ctx.strokeStyle = state.isDud ? `rgba(192, 57, 43, ${1 - (state.time/1.5)})` : `rgba(230, 126, 34, ${1 - (state.time/1.5)})`;
-            ctx.beginPath();
-            ctx.arc(moleculeX + state.dyeJiggle, moleculeY, 25 + state.time * (state.isDud ? 50 : 30), 0, Math.PI * 2);
-            ctx.stroke();
-        }
+        // Render Particles
+        particles.forEach(p => {
+            ctx.fillStyle = `rgba(251, 146, 60, ${p.life})`;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+        });
 
-        // ----- RENDER JABLONSKI DIAGRAM (CENTER CANVAS) -----
-        jCtx.fillStyle = '#1a1a1a';
-        jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
+        // Render Photons
+        if (state.phase === 1) drawPhoton(ctx, molX, molY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
+        else if (state.phase === 3) drawPhoton(ctx, molX, molY, state.photonDistance, state.outAngle, state.waveOut, waveToRGB(state.waveOut));
 
-        jCtx.strokeStyle = '#fff';
-        jCtx.lineWidth = 3;
-        jCtx.beginPath(); jCtx.moveTo(50, jS0_Y); jCtx.lineTo(400, jS0_Y); jCtx.stroke();
-        jCtx.fillStyle = '#fff'; jCtx.font = "14px sans-serif";
-        jCtx.fillText("Ground State (S0)", 50, jS0_Y + 20);
+        // ----- RENDER RIGHT CANVAS (Jablonski) -----
+        jCtx.fillStyle = '#050505'; jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
 
-        jCtx.strokeStyle = '#aaa';
-        jCtx.beginPath(); jCtx.moveTo(50, jS1_Y); jCtx.lineTo(250, jS1_Y); jCtx.stroke();
-        jCtx.fillText("Excited State (S1)", 50, jS1_Y - 10);
+        // Draw Energy States
+        jCtx.lineWidth = 3; jCtx.font = "bold 14px sans-serif";
+        
+        // S0 Ground
+        jCtx.strokeStyle = '#475569'; jCtx.beginPath(); jCtx.moveTo(60, jS0_Y); jCtx.lineTo(540, jS0_Y); jCtx.stroke();
+        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 22);
 
+        // S1 Excited
+        jCtx.strokeStyle = '#64748b'; jCtx.beginPath(); jCtx.moveTo(60, jS1_Y); jCtx.lineTo(300, jS1_Y); jCtx.stroke();
+        jCtx.fillText("S1 (Excited State)", 60, jS1_Y - 12);
+
+        // Vibrational Levels (Internal Conversion)
         if (!state.isDud) {
-            jCtx.lineWidth = 1;
-            jCtx.setLineDash([5, 5]);
-            for(let v = 1; v <= 5; v++) {
+            jCtx.lineWidth = 2; jCtx.strokeStyle = '#334155';
+            for(let v = 1; v <= 4; v++) {
                 let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
-                if(vy <= jS1_Relaxed_Y) {
-                    jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(350, vy); jCtx.stroke();
-                }
+                jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(400, vy); jCtx.stroke();
             }
+            jCtx.lineWidth = 3; jCtx.strokeStyle = '#059669';
+            jCtx.beginPath(); jCtx.moveTo(200, jS1_Relaxed_Y); jCtx.lineTo(540, jS1_Relaxed_Y); jCtx.stroke();
+            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0 (Relaxed)", 440, jS1_Relaxed_Y - 10);
+        }
+
+        // Draw Arrows
+        function drawJArrow(fx, fy, tx, ty, color, dash=false) {
+            jCtx.strokeStyle = color; jCtx.lineWidth = 3;
+            if(dash) jCtx.setLineDash([6, 6]); else jCtx.setLineDash([]);
+            jCtx.beginPath(); jCtx.moveTo(fx, fy); jCtx.lineTo(tx, ty); jCtx.stroke();
             jCtx.setLineDash([]);
             
-            // The solid green S1 Relaxed line
-            jCtx.lineWidth = 3;
-            jCtx.strokeStyle = '#2ecc71';
-            jCtx.beginPath(); jCtx.moveTo(150, jS1_Relaxed_Y); jCtx.lineTo(400, jS1_Relaxed_Y); jCtx.stroke();
+            let ang = Math.atan2(ty-fy, tx-fx);
+            jCtx.beginPath(); jCtx.moveTo(tx, ty);
+            jCtx.lineTo(tx - 12*Math.cos(ang - Math.PI/6), ty - 12*Math.sin(ang - Math.PI/6));
+            jCtx.lineTo(tx - 12*Math.cos(ang + Math.PI/6), ty - 12*Math.sin(ang + Math.PI/6));
+            jCtx.fillStyle = color; jCtx.fill();
         }
 
-        // Arrow Render Logic
         if (state.phase === 1 || state.phase === 1.5) { 
-            jCtx.strokeStyle = waveToRGB(state.waveIn);
-            drawArrow(jCtx, 100, jS0_Y, 100, jS1_Y);
+            drawJArrow(120, jS0_Y, 120, jS1_Y, waveToRGB(state.waveIn));
         } else if (state.phase === 2) { 
-            jCtx.strokeStyle = state.isDud ? '#c0392b' : '#e67e22';
-            drawArrow(jCtx, 100, jS1_Y, 200, state.isDud ? jS0_Y : jS1_Relaxed_Y); 
-            if (state.isDud) {
-                jCtx.fillStyle = '#c0392b';
-                jCtx.fillText("NON-RADIATIVE DECAY", 210, (jS1_Y + jS0_Y)/2);
-            }
+            let jCol = state.isDud ? '#ef4444' : '#f59e0b';
+            drawJArrow(120, jS1_Y, 250, state.isDud ? jS0_Y : jS1_Relaxed_Y, jCol, true); 
+            jCtx.fillStyle = jCol;
+            jCtx.fillText(state.isDud ? "Non-Radiative Decay" : "Internal Conversion", 260, (jS1_Y + jS0_Y)/2);
         } else if (state.phase === 3) { 
-            jCtx.strokeStyle = waveToRGB(state.waveOut);
-            drawArrow(jCtx, 300, jS1_Relaxed_Y, 300, jS0_Y); 
+            drawJArrow(450, jS1_Relaxed_Y, 450, jS0_Y, waveToRGB(state.waveOut)); 
         }
 
-        // Draw Electron Ball (Follows X and Y dynamically!)
-        jCtx.beginPath();
-        jCtx.arc(state.jElectronX, state.jElectronY, 8, 0, Math.PI * 2);
-        jCtx.fillStyle = '#3498db';
-        jCtx.fill();
-        jCtx.strokeStyle = '#fff';
-        jCtx.stroke();
+        // Draw Jablonski Particles
+        particles.forEach(p => {
+            if (p.x < 300) { // Only draw particles spawned on diagram side
+                jCtx.fillStyle = `rgba(251, 146, 60, ${p.life})`;
+                jCtx.beginPath(); jCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); jCtx.fill();
+            }
+        });
+
+        // Draw Electron
+        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 10, 0, Math.PI * 2);
+        jCtx.fillStyle = '#38bdf8'; jCtx.fill();
+        jCtx.shadowBlur = 15; jCtx.shadowColor = '#38bdf8';
+        jCtx.strokeStyle = '#fff'; jCtx.lineWidth = 2; jCtx.stroke();
+        jCtx.shadowBlur = 0;
 
         requestAnimationFrame(loop);
     }
 
-    function drawArrow(ctx, fromx, fromy, tox, toy) {
-        var dx = tox - fromx;
-        var dy = toy - fromy;
-        
-        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return; 
-
-        var headlen = 10; 
-        var angle = Math.atan2(dy, dx);
-        
-        ctx.beginPath();
-        ctx.moveTo(fromx, fromy);
-        ctx.lineTo(tox, toy);
-        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-        ctx.moveTo(tox, toy);
-        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
-        ctx.stroke();
-    }
-
-    document.getElementById('sel-dye').value = 'fluorescein';
-    slWaveIn.value = dyePresets['fluorescein'].wave;
-    slHeat.value = dyePresets['fluorescein'].heat;
-    slQY.value = dyePresets['fluorescein'].qy;
-
+    // Init
+    elements.selDye.value = 'fluorescein';
+    elements.slWaveIn.value = dyePresets['fluorescein'].wave;
+    elements.slHeat.value = dyePresets['fluorescein'].heat;
+    elements.slQY.value = dyePresets['fluorescein'].qy;
     calculatePhysics(false);
     requestAnimationFrame(loop);
 
