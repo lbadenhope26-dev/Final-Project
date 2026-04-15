@@ -238,7 +238,6 @@
     const HC = 1240; 
     let particles = []; 
 
-    // ONLY UV-COMPATIBLE PRESETS
     const dyePresets = {
         'assignment': { wave: 350, heat: 32, qy: 100 }, 
         'dapi': { wave: 350, heat: 25, qy: 50 },
@@ -420,18 +419,17 @@
 
             if (Math.abs(state.jElectronY - targetY) < 1.5 && Math.abs(state.jElectronX - targetX) < 1.5) {
                 if (state.holdTime > 0.8) { 
-                    state.phase = state.isDud ? 4 : 2.5; 
+                    if (state.isDud) {
+                        state.phase = 4;
+                    } else {
+                        state.phase = 3; 
+                        state.photonDistance = 0;
+                        elements.statusDisplay.innerText = "FLUORESCENCE EMISSION";
+                        elements.statusDisplay.style.backgroundColor = "#064e3b";
+                        elements.statusDisplay.style.color = "#6ee7b7";
+                    }
                     state.dyeJiggle = 0;
                 }
-            }
-        } 
-        else if (state.phase === 2.5) { 
-            state.jElectronX += (450 - state.jElectronX) * 10 * dt;
-            if (Math.abs(state.jElectronX - 450) < 1.5) {
-                state.jElectronX = 450; state.phase = 3; state.photonDistance = 0;
-                elements.statusDisplay.innerText = "FLUORESCENCE EMISSION";
-                elements.statusDisplay.style.backgroundColor = "#064e3b";
-                elements.statusDisplay.style.color = "#6ee7b7";
             }
         } 
         else if (state.phase === 3) { 
@@ -553,7 +551,7 @@
             jCtx.fillStyle = jCol;
             jCtx.fillText(state.isDud ? "Non-Radiative Decay" : "Internal Conversion", 260, (jS1_Y + jS0_Y)/2);
         } else if (state.phase === 3) { 
-            drawJArrow(450, jS1_Relaxed_Y, 450, jS0_Y, waveToRGB(state.waveOut)); 
+            drawJArrow(250, jS1_Relaxed_Y, 250, jS0_Y, waveToRGB(state.waveOut)); 
         }
 
         particles.filter(p => p.isJ).forEach(p => {
