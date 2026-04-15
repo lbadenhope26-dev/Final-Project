@@ -14,7 +14,6 @@
             --border: #334155;
         }
 
-        /* LOCKED TO VIEWPORT TO PREVENT SCROLLING */
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-main);
@@ -24,15 +23,15 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            padding: 10px 20px;
+            padding: 5px 10px;
             box-sizing: border-box;
             overflow: hidden; 
-            line-height: 1.4;
+            line-height: 1.3;
         }
 
         .container {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             max-width: 1400px;
             width: 100%;
             max-height: 100%;
@@ -41,7 +40,7 @@
         .canvas-col {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             flex: 1;
             justify-content: center;
         }
@@ -49,9 +48,9 @@
         .canvas-wrapper {
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         canvas {
@@ -62,82 +61,83 @@
         }
 
         .graph-header {
-            font-size: 0.85em;
+            font-size: 0.75em;
             font-weight: 600;
             color: #94a3b8;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
         .panel {
             background-color: var(--bg-panel);
-            padding: 15px 20px;
+            padding: 10px 15px;
             border: 1px solid var(--border);
-            border-radius: 10px;
-            width: 340px;
+            border-radius: 8px;
+            width: 320px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        h3 { margin: 0; color: #fff; font-size: 1.05em; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        h3 { margin: 0; color: #fff; font-size: 0.95em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
 
-        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        .control-group { display: flex; flex-direction: column; gap: 2px; }
         
         .control-group label {
             display: flex; justify-content: space-between;
-            font-size: 0.8em; font-weight: 500; color: #cbd5e1;
+            font-size: 0.75em; font-weight: 500; color: #cbd5e1;
         }
 
-        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; margin: 2px 0; }
         input:disabled, select:disabled { opacity: 0.5; cursor: not-allowed; }
 
         select {
             background-color: #0f172a; color: #fff; border: 1px solid var(--border);
-            padding: 8px; border-radius: 6px; font-family: inherit; cursor: pointer;
-            width: 100%; font-size: 0.85em; transition: border-color 0.2s;
+            padding: 6px; border-radius: 4px; font-family: inherit; cursor: pointer;
+            width: 100%; font-size: 0.8em; transition: border-color 0.2s;
         }
         select:focus { outline: none; border-color: var(--accent); }
 
         .checkbox-group {
-            display: flex; align-items: center; gap: 8px;
-            background: #0f172a; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 6px;
+            background: #0f172a; padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border);
         }
-        .checkbox-group label { margin: 0; cursor: pointer; color: #fff; font-size: 0.85em; }
+        .checkbox-group label { margin: 0; cursor: pointer; color: #fff; font-size: 0.8em; }
         
         button {
             background-color: var(--accent); color: white; border: none;
-            padding: 10px; border-radius: 6px; cursor: pointer;
-            font-weight: 700; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.2s; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+            padding: 8px; border-radius: 4px; cursor: pointer;
+            font-weight: 700; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+            margin-top: 2px;
         }
         button:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
         button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
 
         .status-box {
-            background-color: #0f172a; border: 1px solid var(--border); padding: 8px;
-            border-radius: 6px; text-align: center; font-weight: bold;
-            font-size: 0.75em; letter-spacing: 1px; transition: background-color 0.3s;
+            background-color: #0f172a; border: 1px solid var(--border); padding: 6px;
+            border-radius: 4px; text-align: center; font-weight: bold;
+            font-size: 0.7em; letter-spacing: 1px; transition: background-color 0.3s;
         }
 
         .readout {
-            background-color: #0f172a; padding: 10px; border-radius: 6px;
-            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8em;
-            display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border);
+            background-color: #0f172a; padding: 8px; border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.75em;
+            display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border);
         }
         .readout div { display: flex; justify-content: space-between; align-items: center; }
-        .readout span { font-size: 1.1em; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        .readout span { font-size: 1.05em; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
         .color-preview {
-            display: inline-block; width: 14px; height: 14px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 6px currentColor;
+            display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 4px currentColor;
         }
 
-        .bar-container { width: 100%; height: 18px; background-color: #0f172a; border-radius: 4px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+        .bar-container { width: 100%; height: 14px; background-color: #0f172a; border-radius: 3px; position: relative; border: 1px solid var(--border); overflow: hidden; margin-bottom: 2px; }
         .bar { height: 100%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bar-label { position: absolute; top: 0; left: 8px; font-size: 0.7em; font-weight: bold; line-height: 18px; text-shadow: 1px 1px 2px #000; z-index: 2; }
+        .bar-label { position: absolute; top: 0; left: 6px; font-size: 0.65em; font-weight: bold; line-height: 14px; text-shadow: 1px 1px 2px #000; z-index: 2; }
     </style>
 </head>
 <body>
@@ -146,11 +146,11 @@
     <div class="canvas-col">
         <div class="canvas-wrapper">
             <div class="graph-header"><span>Physical Space (Fluorescence)</span></div>
-            <canvas id="simCanvas" width="600" height="240"></canvas>
+            <canvas id="simCanvas" width="600" height="200"></canvas>
         </div>
         <div class="canvas-wrapper">
             <div class="graph-header"><span>Jablonski Energy Diagram</span></div>
-            <canvas id="jablonskiCanvas" width="600" height="280"></canvas>
+            <canvas id="jablonskiCanvas" width="600" height="230"></canvas>
         </div>
     </div>
 
@@ -191,20 +191,20 @@
 
         <div class="status-box" id="status-display">SYSTEM IDLE</div>
 
-        <h3>Energy Conservation Tracker</h3>
+        <h3>Energy Tracker</h3>
         <div class="readout">
-            <div>Incoming Energy (E = hc/λ): <span id="out-in" style="color:#a78bfa;">0.00 eV</span></div>
-            <div>Vibrational Relaxation: <span id="out-heat" style="color:#fb923c;">0.00 eV</span></div>
-            <div style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;">
+            <div>Incoming E = hc/λ: <span id="out-in" style="color:#a78bfa;">0.00 eV</span></div>
+            <div>Vibrational Loss: <span id="out-heat" style="color:#fb923c;">0.00 eV</span></div>
+            <div style="border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px;">
                 Emitted Photon: <span id="out-out" style="color:#34d399;">0.00 eV</span>
             </div>
             <div>Emission Wavelength: <span id="out-wave-out" style="display:flex; align-items:center; gap:6px;">--- nm</span></div>
         </div>
 
-        <div class="control-group" style="gap: 8px;">
+        <div class="control-group" style="gap: 4px;">
             <div class="bar-container">
                 <div class="bar" id="bar-in" style="width: 100%; background: linear-gradient(90deg, #6d28d9, #a78bfa);"></div>
-                <div class="bar-label">Excitation Energy</div>
+                <div class="bar-label">Excitation</div>
             </div>
             <div class="bar-container">
                 <div class="bar" id="bar-heat" style="background: linear-gradient(90deg, #ea580c, #fb923c);"></div>
@@ -212,7 +212,7 @@
             </div>
             <div class="bar-container">
                 <div class="bar" id="bar-out" style="background: linear-gradient(90deg, #059669, #34d399);"></div>
-                <div class="bar-label">Emission Energy</div>
+                <div class="bar-label">Emission</div>
             </div>
         </div>
     </div>
@@ -250,13 +250,13 @@
         'quinine': { wave: 350, heat: 24, qy: 55 }
     };
 
-    // Y-Coordinates updated for smaller canvases
+    // Adjusted Y-coordinates for the even smaller canvases
     let state = {
         phase: 0, time: 0,
         energyIn: 0, energyHeat: 0, energyOut: 0,
         waveIn: 0, waveOut: 0,
         photonDistance: 0, outAngle: 0, isDud: false, 
-        jElectronX: 120, jElectronY: 240, dyeJiggle: 0, holdTime: 0         
+        jElectronX: 120, jElectronY: 190, dyeJiggle: 0, holdTime: 0         
     };
 
     function toggleControls(disabled) {
@@ -311,7 +311,7 @@
         elements.outOut.innerText = state.energyOut.toFixed(2) + " eV";
 
         if (state.energyOut === 0) {
-            elements.outWaveOut.innerHTML = `NONE (Heat Only) <span class="color-preview" style="background:#222; border-color:#555"></span>`;
+            elements.outWaveOut.innerHTML = `NONE (Heat) <span class="color-preview" style="background:#222; border-color:#555"></span>`;
             elements.outWaveOut.style.color = "#64748b";
         } else {
             let colorOut = waveToRGB(state.waveOut);
@@ -348,14 +348,14 @@
         toggleControls(true); 
         
         state.phase = 1; state.photonDistance = -300; state.time = 0; state.holdTime = 0;
-        state.jElectronX = 120; state.jElectronY = 240; state.dyeJiggle = 0;
+        state.jElectronX = 120; state.jElectronY = 190; state.dyeJiggle = 0;
     }
 
     function spawnHeatParticle(x, y, isJablonski = false) {
         particles.push({ 
             x: x, y: y, 
-            vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 150, 
-            life: 1.0, size: Math.random() * 3 + 2,
+            vx: (Math.random() - 0.5) * 120, vy: (Math.random() - 0.5) * 120, 
+            life: 1.0, size: Math.random() * 2 + 1.5,
             isJ: isJablonski
         });
     }
@@ -363,14 +363,14 @@
     function drawPhoton(ctx, xC, yC, dist, angle, wave, color) {
         ctx.save(); ctx.translate(xC, yC); ctx.rotate(angle);
         ctx.beginPath();
-        ctx.shadowBlur = 15; ctx.shadowColor = color;
-        ctx.strokeStyle = color; ctx.lineWidth = 4;
+        ctx.shadowBlur = 10; ctx.shadowColor = color;
+        ctx.strokeStyle = color; ctx.lineWidth = 3;
         
         const freq = 40 / wave; 
-        for (let x = -40; x <= 40; x++) {
-            let env = Math.exp(-(x*x)/300); 
-            let y = Math.sin((x - state.time * 400) * freq) * 18 * env;
-            if (x === -40) ctx.moveTo(dist + x, y); else ctx.lineTo(dist + x, y);
+        for (let x = -30; x <= 30; x++) {
+            let env = Math.exp(-(x*x)/200); 
+            let y = Math.sin((x - state.time * 400) * freq) * 12 * env;
+            if (x === -30) ctx.moveTo(dist + x, y); else ctx.lineTo(dist + x, y);
         }
         ctx.stroke(); ctx.restore();
     }
@@ -383,11 +383,11 @@
         if (dt > 0.1) dt = 0.1; 
         state.time += dt;
 
-        const molX = canvas.width / 2; const molY = 120; // Adjusted for 240px height
+        const molX = canvas.width / 2; const molY = 100; // Adjusted for 200px height
         
-        const jS0_Y = 240; // Adjusted for 280px height
-        const jS1_Y = jS0_Y - (state.energyIn * 35); // Scale adjusted to fit
-        const jS1_Relaxed_Y = Math.min(jS0_Y - 15, jS1_Y + Math.max(25, state.energyHeat * 35)); 
+        const jS0_Y = 190; // Adjusted for 230px height
+        const jS1_Y = jS0_Y - (state.energyIn * 28); // Squeeze energy gap
+        const jS1_Relaxed_Y = Math.min(jS0_Y - 12, jS1_Y + Math.max(15, state.energyHeat * 28)); 
 
         if (state.phase === 1) { 
             state.photonDistance += 450 * dt; 
@@ -401,7 +401,7 @@
                 state.jElectronY = jS1_Y; state.phase = 2; state.holdTime = 0; 
                 if (state.isDud) {
                     calculatePhysics(true); 
-                    elements.statusDisplay.innerText = "NON-RADIATIVE DECAY (HEAT LOSS)";
+                    elements.statusDisplay.innerText = "NON-RADIATIVE DECAY (HEAT)";
                     elements.statusDisplay.style.backgroundColor = "#7f1d1d";
                     elements.statusDisplay.style.color = "#fca5a5";
                 } else {
@@ -413,7 +413,7 @@
         } 
         else if (state.phase === 2) { 
             state.holdTime += dt;
-            state.dyeJiggle = Math.sin(state.holdTime * 60) * (state.isDud ? 12 : 6); 
+            state.dyeJiggle = Math.sin(state.holdTime * 60) * (state.isDud ? 10 : 5); 
             
             if(Math.random() < (state.isDud ? 0.6 : 0.3)) spawnHeatParticle(molX + state.dyeJiggle, molY, false);
             if(Math.random() < 0.2) spawnHeatParticle(state.jElectronX, state.jElectronY, true); 
@@ -469,38 +469,38 @@
         
         if (state.phase === 1) drawPhoton(ctx, molX, molY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
         
-        // FLASHLIGHT SHAPE
+        // FLASHLIGHT SHAPE (Scaled down)
         ctx.fillStyle = '#334155'; 
-        ctx.fillRect(10, molY - 12, 50, 24); 
+        ctx.fillRect(10, molY - 10, 40, 20); 
         ctx.fillStyle = '#475569'; 
         ctx.beginPath();
-        ctx.moveTo(60, molY - 12);
-        ctx.lineTo(80, molY - 20);
-        ctx.lineTo(80, molY + 20);
-        ctx.lineTo(60, molY + 12);
+        ctx.moveTo(50, molY - 10);
+        ctx.lineTo(65, molY - 16);
+        ctx.lineTo(65, molY + 16);
+        ctx.lineTo(50, molY + 10);
         ctx.closePath();
         ctx.fill();
         
         if (state.phase === 2 && state.holdTime > 0) {
-            let rippleRadius = 30 + (state.holdTime * 80);
+            let rippleRadius = 25 + (state.holdTime * 70);
             let rippleAlpha = Math.max(0, 1 - (state.holdTime * 1.5));
             if (rippleAlpha > 0) {
                 ctx.beginPath(); ctx.arc(molX, molY, rippleRadius, 0, Math.PI * 2);
                 ctx.strokeStyle = `rgba(255, 255, 255, ${rippleAlpha})`;
-                ctx.lineWidth = 2; ctx.stroke();
+                ctx.lineWidth = 1.5; ctx.stroke();
             }
         }
 
-        ctx.beginPath(); ctx.arc(molX + state.dyeJiggle, molY, 30, 0, Math.PI * 2);
+        ctx.beginPath(); ctx.arc(molX + state.dyeJiggle, molY, 25, 0, Math.PI * 2);
         if (state.phase >= 1.5 && state.phase < 3) {
-            let g = ctx.createRadialGradient(molX+state.dyeJiggle, molY, 0, molX+state.dyeJiggle, molY, 40);
+            let g = ctx.createRadialGradient(molX+state.dyeJiggle, molY, 0, molX+state.dyeJiggle, molY, 35);
             let glowCol = state.isDud ? '#dc2626' : '#ea580c';
             g.addColorStop(0, glowCol); g.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = g; ctx.fill();
         }
         ctx.fillStyle = '#1e293b'; ctx.fill();
         ctx.strokeStyle = (state.phase >= 1.5 && state.phase < 3) ? '#f8fafc' : '#64748b';
-        ctx.lineWidth = 3; ctx.stroke();
+        ctx.lineWidth = 2.5; ctx.stroke();
 
         if (state.phase === 3) drawPhoton(ctx, molX, molY, state.photonDistance, state.outAngle, state.waveOut, waveToRGB(state.waveOut));
 
@@ -512,40 +512,40 @@
         // --- RENDER JABLONSKI CANVAS ---
         jCtx.fillStyle = '#050505'; jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
 
-        jCtx.lineWidth = 3; jCtx.font = "bold 13px sans-serif";
+        jCtx.lineWidth = 2.5; jCtx.font = "bold 12px sans-serif";
         
         jCtx.strokeStyle = '#475569'; jCtx.beginPath(); jCtx.moveTo(60, jS0_Y); jCtx.lineTo(540, jS0_Y); jCtx.stroke();
-        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 20);
+        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 18);
 
-        const s1LabelY = Math.max(16, jS1_Y - 10);
+        const s1LabelY = Math.max(14, jS1_Y - 8);
         jCtx.strokeStyle = '#64748b'; jCtx.beginPath(); jCtx.moveTo(60, jS1_Y); jCtx.lineTo(300, jS1_Y); jCtx.stroke();
         jCtx.fillText("S1 (Excited State)", 60, s1LabelY);
 
         if (!state.isDud) {
-            jCtx.lineWidth = 2; jCtx.strokeStyle = '#334155';
+            jCtx.lineWidth = 1.5; jCtx.strokeStyle = '#334155';
             for(let v = 1; v <= 4; v++) {
                 let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
                 jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(400, vy); jCtx.stroke();
             }
-            jCtx.lineWidth = 3; jCtx.strokeStyle = '#059669';
+            jCtx.lineWidth = 2.5; jCtx.strokeStyle = '#059669';
             jCtx.beginPath(); jCtx.moveTo(200, jS1_Relaxed_Y); jCtx.lineTo(540, jS1_Relaxed_Y); jCtx.stroke();
-            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0 (Relaxed)", 440, jS1_Relaxed_Y - 8);
+            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0", 440, jS1_Relaxed_Y - 6);
         }
 
         function drawJArrow(fx, fy, tx, ty, color, dash=false) {
             jCtx.save();
             jCtx.strokeStyle = color; 
             jCtx.fillStyle = color;
-            jCtx.lineWidth = 3;
-            if(dash) jCtx.setLineDash([6, 6]);
+            jCtx.lineWidth = 2.5;
+            if(dash) jCtx.setLineDash([5, 5]);
             
             jCtx.beginPath(); jCtx.moveTo(fx, fy); jCtx.lineTo(tx, ty); jCtx.stroke();
             
             jCtx.setLineDash([]);
             let ang = Math.atan2(ty-fy, tx-fx);
             jCtx.beginPath(); jCtx.moveTo(tx, ty);
-            jCtx.lineTo(tx - 10*Math.cos(ang - Math.PI/6), ty - 10*Math.sin(ang - Math.PI/6));
-            jCtx.lineTo(tx - 10*Math.cos(ang + Math.PI/6), ty - 10*Math.sin(ang + Math.PI/6));
+            jCtx.lineTo(tx - 8*Math.cos(ang - Math.PI/6), ty - 8*Math.sin(ang - Math.PI/6));
+            jCtx.lineTo(tx - 8*Math.cos(ang + Math.PI/6), ty - 8*Math.sin(ang + Math.PI/6));
             jCtx.fill();
             jCtx.restore();
         }
@@ -556,7 +556,7 @@
             let jCol = state.isDud ? '#ef4444' : '#f59e0b';
             drawJArrow(120, jS1_Y, 250, state.isDud ? jS0_Y : jS1_Relaxed_Y, jCol, true); 
             jCtx.fillStyle = jCol;
-            jCtx.fillText(state.isDud ? "Non-Radiative Decay" : "Internal Conversion", 260, (jS1_Y + jS0_Y)/2);
+            jCtx.fillText(state.isDud ? "Non-Radiative" : "Internal Conversion", 260, (jS1_Y + jS0_Y)/2);
         } else if (state.phase === 3) { 
             drawJArrow(250, jS1_Relaxed_Y, 250, jS0_Y, waveToRGB(state.waveOut)); 
         }
@@ -566,16 +566,15 @@
             jCtx.beginPath(); jCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); jCtx.fill();
         });
 
-        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 8, 0, Math.PI * 2);
+        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 6, 0, Math.PI * 2);
         jCtx.fillStyle = '#38bdf8'; jCtx.fill();
-        jCtx.shadowBlur = 12; jCtx.shadowColor = '#38bdf8';
-        jCtx.strokeStyle = '#fff'; jCtx.lineWidth = 2; jCtx.stroke();
+        jCtx.shadowBlur = 10; jCtx.shadowColor = '#38bdf8';
+        jCtx.strokeStyle = '#fff'; jCtx.lineWidth = 1.5; jCtx.stroke();
         jCtx.shadowBlur = 0;
 
         requestAnimationFrame(loop);
     }
 
-    // INITIALIZE WITH ASSIGNMENT PRESET
     elements.selDye.value = 'assignment';
     elements.slWaveIn.value = dyePresets['assignment'].wave;
     elements.slHeat.value = dyePresets['assignment'].heat;
