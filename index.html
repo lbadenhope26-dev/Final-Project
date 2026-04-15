@@ -59,6 +59,19 @@
         input[type="range"] {
             width: 100%;
         }
+        select {
+            background-color: #1a1a1a;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #9b59b6;
+        }
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -181,17 +194,27 @@
 
     <div class="center-col">
         <div class="graph-header">
-            <span>Jablonski Energy Diagram (The "Bouncing Ball" Stairs)</span>
+            <span>Jablonski Energy Diagram</span>
         </div>
         <canvas id="jablonskiCanvas" width="450" height="300"></canvas>
     </div>
 
     <div class="panel">
         <h3>Laser & Dye Parameters</h3>
+
+        <div class="control-group">
+            <label>Dye Molecule Preset</label>
+            <select id="sel-dye">
+                <option value="custom">Custom (Use Sliders)</option>
+                <option value="fluorescein">Fluorescein (Blue to Green)</option>
+                <option value="rhodamine">Rhodamine 6G (Green to Yellow)</option>
+                <option value="dapi">DAPI (UV to Blue)</option>
+            </select>
+        </div>
         
         <div class="control-group">
-            <label>Incoming UV Laser (λ) <span id="val-wave-in">350 nm</span></label>
-            <input type="range" id="sl-wave-in" min="200" max="450" step="5" value="350">
+            <label>Incoming Laser (λ) <span id="val-wave-in">350 nm</span></label>
+            <input type="range" id="sl-wave-in" min="200" max="700" step="5" value="350">
         </div>
 
         <div class="control-group">
@@ -215,9 +238,9 @@
 
         <h3>Energy Tracker (Conserved)</h3>
         <div class="readout">
-            <div>Incoming Energy (Total): <span id="out-in" style="color:#9b59b6;">0.00 eV</span></div>
+            <div>Incoming Energy: <span id="out-in" style="color:#9b59b6;">0.00 eV</span></div>
             <div>Internal Heat (Lost): <span id="out-heat" style="color:#e67e22;">0.00 eV</span></div>
-            <div>Emitted Photon (Out): <span id="out-out" style="color:#2ecc71;">0.00 eV</span></div>
+            <div>Emitted Photon: <span id="out-out" style="color:#2ecc71;">0.00 eV</span></div>
             <div class="total-energy">Total Output Check: <span id="out-check">0.00 eV</span></div>
         </div>
 
@@ -250,6 +273,7 @@
     const jCanvas = document.getElementById('jablonskiCanvas');
     const jCtx = jCanvas.getContext('2d');
 
+    const selDye = document.getElementById('sel-dye');
     const slWaveIn = document.getElementById('sl-wave-in');
     const slHeat = document.getElementById('sl-heat');
     const slQY = document.getElementById('sl-qy');
@@ -269,6 +293,12 @@
 
     const HC = 1240; 
 
+    const dyePresets = {
+        'fluorescein': { wave: 490, heat: 5, qy: 90 },
+        'rhodamine': { wave: 530, heat: 6, qy: 95 },
+        'dapi': { wave: 350, heat: 25, qy: 50 }
+    };
+
     let state = {
         phase: 0, 
         time: 0,
@@ -280,10 +310,10 @@
         photonDistance: 0, 
         outAngle: 0, 
         isDud: false, 
-        jElectronY: 0, 
+        jElectronX: 100, // Tracks the ball's X coordinate horizontally 
+        jElectronY: 250, // Tracks the ball's Y coordinate vertically
         dyeJiggle: 0,
-        reachedTarget: false, // Strict positional lock flag
-        holdTime: 0         // Timer that ONLY runs once the ball is on the line
+        holdTime: 0         
     };
 
     function waveToRGB(Wavelength) {
@@ -360,11 +390,20 @@
         barOut.style.width = ((eOut / eIn) * 100) + "%";
     }
 
+    selDye.addEventListener('change', (e) => {
+        if (e.target.value !== 'custom') {
+            const preset = dyePresets[e.target.value];
+            slWaveIn.value = preset.wave;
+            slHeat.value = preset.heat;
+            slQY.value = preset.qy;
+            calculatePhysics(false);
+        }
+    });
+
     [slWaveIn, slHeat, slQY].forEach(el => {
         el.addEventListener('input', () => {
-            if (state.phase === 0) {
-                calculatePhysics(false); 
-            }
+            selDye.value = 'custom';
+            if (state.phase === 0) calculatePhysics(false); 
         });
     });
 
@@ -374,11 +413,8 @@
         const qyChance = parseFloat(slQY.value) / 100;
         state.isDud = Math.random() > qyChance;
         
-        if (chkIso.checked) {
-            state.outAngle = Math.random() * Math.PI * 2; 
-        } else {
-            state.outAngle = 0; 
-        }
+        if (chkIso.checked) state.outAngle = Math.random() * Math.PI * 2; 
+        else state.outAngle = 0; 
 
         calculatePhysics(false); 
         statusDisplay.innerText = "STATUS: PHOTON INCOMING";
@@ -387,6 +423,7 @@
         state.phase = 1;
         state.photonDistance = -200; 
         state.time = 0;
+        state.jElectronX = 100;
         state.jElectronY = 250; 
         state.dyeJiggle = 0;
         btnFire.disabled = true;
@@ -415,31 +452,39 @@
     let lastTime = performance.now();
 
     function loop(timestamp) {
-        // Calculate true real-world delta-time regardless of monitor refresh rate
         let dt = (timestamp - lastTime) / 1000; 
         lastTime = timestamp;
-        if (dt > 0.1) dt = 0.1; // Cap at 100ms max to prevent massive jumps if tab was minimized
+        if (dt > 0.1) dt = 0.1; 
 
         state.time += dt;
 
         const moleculeX = canvas.width / 2;
         const moleculeY = 150;
         
-        // Physics constants strictly locked to the state (slider moves won't break animation)
         const jS0_Y = 250; 
         const jS1_Y = jS0_Y - (state.energyIn * 40); 
         const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); 
 
-        // ----------------------------------------------------
-        // LOGIC PHASE MACHINE
-        // ----------------------------------------------------
-        if (state.phase === 1) { // Incoming
+        // ----- PHASE STATE ENGINE -----
+        
+        if (state.phase === 1) { 
+            // Photon travelling towards molecule
             state.photonDistance += 300 * dt;
             if (state.photonDistance >= 0) {
+                state.phase = 1.5;
+                state.photonDistance = 0;
+                statusDisplay.innerText = "STATUS: ABSORPTION";
+                statusDisplay.style.backgroundColor = "#8e44ad";
+            }
+        } 
+        else if (state.phase === 1.5) { 
+            // Instantaneous absorption: Ball slides UP the S0->S1 arrow
+            let jumpSpeed = (jS0_Y - jS1_Y) / 0.15; // 0.15s animation
+            state.jElectronY -= jumpSpeed * dt;
+            
+            if (state.jElectronY <= jS1_Y) {
+                state.jElectronY = jS1_Y;
                 state.phase = 2;
-                state.time = 0;
-                state.jElectronY = jS1_Y; 
-                state.reachedTarget = false; 
                 state.holdTime = 0;
                 
                 if (state.isDud) {
@@ -451,61 +496,76 @@
                     statusDisplay.style.backgroundColor = "#d35400";
                 }
             }
-        } else if (state.phase === 2) { // Vibrational Relaxation (Heat)
+        } 
+        else if (state.phase === 2) { 
+            // Vibrational Relaxation: Ball drops diagonally
             state.dyeJiggle = Math.sin(state.time * 50) * (state.isDud ? 10 : 5); 
             
             let targetY = state.isDud ? jS0_Y : jS1_Relaxed_Y;
-            let dropSpeed = Math.max(50, (targetY - jS1_Y) / 1.0); // Will take ~1 second to fall
+            let dropTime = 0.6; 
             
-            // 1. Move electron down
             if (state.jElectronY < targetY) {
-                state.jElectronY += dropSpeed * dt;
+                state.jElectronY += ((targetY - jS1_Y) / dropTime) * dt;
+                if (state.jElectronY > targetY) state.jElectronY = targetY;
             } 
-            
-            // 2. Strict Positional Lock
-            if (state.jElectronY >= targetY) {
-                state.jElectronY = targetY; // Snap perfectly to the line
-                if (!state.reachedTarget) {
-                    state.reachedTarget = true; // Flag that we have arrived
-                    state.holdTime = 0; // Start the pause timer
-                }
+            if (state.jElectronX < 200) {
+                state.jElectronX += (100 / dropTime) * dt;
+                if (state.jElectronX > 200) state.jElectronX = 200;
             }
 
-            // 3. Pause and Wait (Only runs if perfectly on the line)
-            if (state.reachedTarget) {
+            if (state.jElectronY === targetY && state.jElectronX === 200) {
                 state.holdTime += dt;
-                
-                if (state.holdTime > 0.4) { // Hold for a 400ms visual pause on the line
+                if (state.holdTime > 0.3) { 
                     if (state.isDud) {
-                        state.phase = 0; 
+                        state.phase = 4; // Skip straight to reset if dud
                         state.dyeJiggle = 0;
-                        btnFire.disabled = false;
-                        statusDisplay.innerText = "STATUS: IDLE";
-                        statusDisplay.style.backgroundColor = "#2c3e50";
-                        calculatePhysics(false); 
                     } else {
-                        state.phase = 3;
+                        state.phase = 2.5; // Proceed to green line
                         state.dyeJiggle = 0;
-                        state.jElectronY = jS0_Y; 
-                        state.photonDistance = 0;
-                        statusDisplay.innerText = "STATUS: EMISSION!";
-                        statusDisplay.style.backgroundColor = "#27ae60";
                     }
                 }
             }
-        } else if (state.phase === 3) { // Emission
+        } 
+        else if (state.phase === 2.5) { 
+            // Traversing the green S1 Relaxed Line
+            state.jElectronX += (100 / 0.4) * dt;
+            
+            if (state.jElectronX >= 300) {
+                state.jElectronX = 300;
+                state.phase = 3;
+                state.photonDistance = 0;
+                statusDisplay.innerText = "STATUS: EMISSION!";
+                statusDisplay.style.backgroundColor = "#27ae60";
+            }
+        } 
+        else if (state.phase === 3) { 
+            // Emission: Ball drops straight down the emission arrow
             state.photonDistance += 300 * dt;
-            if (state.photonDistance > 300) { 
+            
+            let dropSpeed3 = (jS0_Y - jS1_Relaxed_Y) / 0.35; 
+            if (state.jElectronY < jS0_Y) {
+                state.jElectronY += dropSpeed3 * dt;
+                if (state.jElectronY > jS0_Y) state.jElectronY = jS0_Y;
+            }
+
+            if (state.photonDistance > 300 && state.jElectronY >= jS0_Y) { 
+                state.phase = 4;
+            }
+        } 
+        else if (state.phase === 4) { 
+            // Invisible Reset Slide: Slides ball back to X=100
+            state.jElectronX -= 400 * dt;
+            if (state.jElectronX <= 100) {
+                state.jElectronX = 100;
                 state.phase = 0;
                 btnFire.disabled = false;
                 statusDisplay.innerText = "STATUS: IDLE";
                 statusDisplay.style.backgroundColor = "#2c3e50";
+                if(state.isDud) calculatePhysics(false);
             }
         }
 
-        // ----------------------------------------------------
-        // RENDER PHYSICAL SPACE (LEFT CANVAS)
-        // ----------------------------------------------------
+        // ----- RENDER PHYSICAL SPACE (LEFT CANVAS) -----
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -517,7 +577,8 @@
         ctx.beginPath();
         ctx.arc(moleculeX + state.dyeJiggle, moleculeY, 25, 0, Math.PI * 2);
         
-        if (state.phase === 2) {
+        let isExcited = (state.phase >= 1.5 && state.phase < 3);
+        if (isExcited) {
             ctx.fillStyle = state.isDud ? '#c0392b' : '#e67e22'; 
             ctx.shadowBlur = state.isDud ? 30 : 20;
             ctx.shadowColor = state.isDud ? '#c0392b' : '#e67e22';
@@ -545,9 +606,7 @@
             ctx.stroke();
         }
 
-        // ----------------------------------------------------
-        // RENDER JABLONSKI DIAGRAM (CENTER CANVAS)
-        // ----------------------------------------------------
+        // ----- RENDER JABLONSKI DIAGRAM (CENTER CANVAS) -----
         jCtx.fillStyle = '#1a1a1a';
         jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
 
@@ -561,7 +620,6 @@
         jCtx.beginPath(); jCtx.moveTo(50, jS1_Y); jCtx.lineTo(250, jS1_Y); jCtx.stroke();
         jCtx.fillText("Excited State (S1)", 50, jS1_Y - 10);
 
-        // Only draw the green S1 Relaxed stairs if it's NOT a dud
         if (!state.isDud) {
             jCtx.lineWidth = 1;
             jCtx.setLineDash([5, 5]);
@@ -573,46 +631,48 @@
             }
             jCtx.setLineDash([]);
             
+            // The solid green S1 Relaxed line
             jCtx.lineWidth = 3;
             jCtx.strokeStyle = '#2ecc71';
             jCtx.beginPath(); jCtx.moveTo(150, jS1_Relaxed_Y); jCtx.lineTo(400, jS1_Relaxed_Y); jCtx.stroke();
         }
 
-        let eX = 100;
-        if (state.phase === 2) eX = 200; 
-        if (state.phase === 3) eX = 300; 
-        
+        // Arrow Render Logic
+        if (state.phase === 1 || state.phase === 1.5) { 
+            jCtx.strokeStyle = waveToRGB(state.waveIn);
+            drawArrow(jCtx, 100, jS0_Y, 100, jS1_Y);
+        } else if (state.phase === 2) { 
+            jCtx.strokeStyle = state.isDud ? '#c0392b' : '#e67e22';
+            drawArrow(jCtx, 100, jS1_Y, 200, state.isDud ? jS0_Y : jS1_Relaxed_Y); 
+            if (state.isDud) {
+                jCtx.fillStyle = '#c0392b';
+                jCtx.fillText("NON-RADIATIVE DECAY", 210, (jS1_Y + jS0_Y)/2);
+            }
+        } else if (state.phase === 3) { 
+            jCtx.strokeStyle = waveToRGB(state.waveOut);
+            drawArrow(jCtx, 300, jS1_Relaxed_Y, 300, jS0_Y); 
+        }
+
+        // Draw Electron Ball (Follows X and Y dynamically!)
         jCtx.beginPath();
-        jCtx.arc(eX, state.phase === 0 ? jS0_Y : state.jElectronY, 8, 0, Math.PI * 2);
+        jCtx.arc(state.jElectronX, state.jElectronY, 8, 0, Math.PI * 2);
         jCtx.fillStyle = '#3498db';
         jCtx.fill();
         jCtx.strokeStyle = '#fff';
         jCtx.stroke();
 
-        if (state.phase === 1) { 
-            jCtx.strokeStyle = waveToRGB(state.waveIn);
-            jCtx.setLineDash([]);
-            drawArrow(jCtx, 100, jS0_Y, 100, jS1_Y);
-        } else if (state.phase === 2) { 
-            jCtx.strokeStyle = state.isDud ? '#c0392b' : '#e67e22';
-            drawArrow(jCtx, 200, jS1_Y, 200, state.jElectronY);
-            if (state.isDud) {
-                jCtx.fillStyle = '#c0392b';
-                jCtx.fillText("NON-RADIATIVE DECAY", 220, (jS1_Y + state.jElectronY)/2);
-            }
-        } else if (state.phase === 3) { 
-            jCtx.strokeStyle = waveToRGB(state.waveOut);
-            drawArrow(jCtx, 300, jS1_Relaxed_Y, 300, jS0_Y);
-        }
-
         requestAnimationFrame(loop);
     }
 
     function drawArrow(ctx, fromx, fromy, tox, toy) {
-        var headlen = 10; 
         var dx = tox - fromx;
         var dy = toy - fromy;
+        
+        if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return; 
+
+        var headlen = 10; 
         var angle = Math.atan2(dy, dx);
+        
         ctx.beginPath();
         ctx.moveTo(fromx, fromy);
         ctx.lineTo(tox, toy);
@@ -621,6 +681,11 @@
         ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
         ctx.stroke();
     }
+
+    document.getElementById('sel-dye').value = 'fluorescein';
+    slWaveIn.value = dyePresets['fluorescein'].wave;
+    slHeat.value = dyePresets['fluorescein'].heat;
+    slQY.value = dyePresets['fluorescein'].qy;
 
     calculatePhysics(false);
     requestAnimationFrame(loop);
