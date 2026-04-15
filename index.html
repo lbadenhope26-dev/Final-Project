@@ -59,6 +59,20 @@
         input[type="range"] {
             width: 100%;
         }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
         .readout {
             background-color: #1a1a1a;
             padding: 10px;
@@ -83,6 +97,15 @@
             margin-top: 5px;
             color: #2ecc71;
         }
+        .status-box {
+            background-color: #2c3e50;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
         .energy-bars {
             display: flex;
             flex-direction: column;
@@ -100,7 +123,7 @@
         .bar {
             height: 100%;
             width: 0%;
-            transition: width 0.1s linear;
+            transition: width 0.1s linear, background-color 0.2s;
         }
         #bar-in { background-color: #9b59b6; }
         #bar-heat { background-color: #e67e22; }
@@ -175,8 +198,20 @@
             <label>Vibrational Energy Loss <span id="val-heat">30%</span></label>
             <input type="range" id="sl-heat" min="5" max="60" step="1" value="30">
         </div>
+
+        <div class="control-group">
+            <label>Quantum Yield (Success Rate) <span id="val-qy">80%</span></label>
+            <input type="range" id="sl-qy" min="0" max="100" step="5" value="80">
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="chk-iso" checked>
+            <label for="chk-iso" style="margin:0; cursor:pointer;">Isotropic Emission (360° Scatter)</label>
+        </div>
         
         <button id="btn-fire" onclick="firePhoton()">Fire Photon</button>
+
+        <div class="status-box" id="status-display">STATUS: IDLE</div>
 
         <h3>Energy Tracker (Conserved)</h3>
         <div class="readout">
@@ -218,7 +253,10 @@
     // UI Elements
     const slWaveIn = document.getElementById('sl-wave-in');
     const slHeat = document.getElementById('sl-heat');
+    const slQY = document.getElementById('sl-qy');
+    const chkIso = document.getElementById('chk-iso');
     const btnFire = document.getElementById('btn-fire');
+    const statusDisplay = document.getElementById('status-display');
 
     const outIn = document.getElementById('out-in');
     const outHeat = document.getElementById('out-heat');
@@ -241,17 +279,17 @@
         energyOut: 0,
         waveIn: 0,
         waveOut: 0,
-        xPhotonIn: 0,
-        xPhotonOut: 0,
-        jElectronY: 0, // For Jablonski diagram
-        jTargetY: 0,
+        photonDistance: 0, // Track distance from source/molecule rather than raw X
+        outAngle: 0, // Emission angle (0 is right)
+        isDud: false, // Quantum Yield check flag
+        jElectronY: 0, 
         dyeJiggle: 0
     };
 
-    // Wavelength to RGB approximation for visual vibes
+    // Wavelength to RGB approximation
     function waveToRGB(Wavelength) {
-        let R, G, B, alpha;
-        if (Wavelength >= 200 && Wavelength < 380) { // UV representation
+        let R, G, B;
+        if (Wavelength >= 200 && Wavelength < 380) { 
             let intensity = (Wavelength - 200) / 180;
             return `rgba(150, 0, 255, ${0.4 + intensity * 0.6})`;
         } else if (Wavelength >= 380 && Wavelength < 440) {
@@ -267,41 +305,41 @@
         } else if (Wavelength >= 645 && Wavelength <= 780) {
             R = 1.0; G = 0.0; B = 0.0;
         } else {
-            R = 0.5; G = 0.0; B = 0.0; // IR representation
+            R = 0.5; G = 0.0; B = 0.0; 
         }
         return `rgb(${Math.round(R * 255)}, ${Math.round(G * 255)}, ${Math.round(B * 255)})`;
     }
 
-    function calculatePhysics() {
+    function calculatePhysics(forceDudOverride = false) {
         const waveIn_nm = parseFloat(slWaveIn.value);
         const heatLossPct = parseFloat(slHeat.value) / 100;
 
-        // E = hc / lambda
         state.waveIn = waveIn_nm;
         state.energyIn = HC / state.waveIn;
         
-        // Strict Algebraic Energy Locking
-        state.energyHeat = state.energyIn * heatLossPct;
-        state.energyOut = state.energyIn - state.energyHeat; // PERFECTLY conserved
-        
-        // Lambda = hc / E
-        state.waveOut = HC / state.energyOut;
+        // If it's a dud, 100% of the energy becomes heat (Non-Radiative Decay)
+        if (forceDudOverride) {
+            state.energyHeat = state.energyIn;
+            state.energyOut = 0;
+            state.waveOut = 0; 
+        } else {
+            state.energyHeat = state.energyIn * heatLossPct;
+            state.energyOut = state.energyIn - state.energyHeat; 
+            state.waveOut = HC / state.energyOut;
+        }
 
         // UI Updates
         document.getElementById('val-wave-in').innerHTML = `${waveIn_nm} nm <span class="color-preview" style="background:${waveToRGB(waveIn_nm)}"></span>`;
         document.getElementById('val-heat').innerText = slHeat.value + "%";
+        document.getElementById('val-qy').innerText = slQY.value + "%";
 
-        if (state.phase === 0) {
-            updateTelemetry();
-        }
+        updateTelemetry();
     }
 
     function updateTelemetry() {
         let eIn = parseFloat(state.energyIn.toFixed(2));
         let eHeat = parseFloat(state.energyHeat.toFixed(2));
         let eOut = parseFloat(state.energyOut.toFixed(2));
-        
-        // Force strings to absorb any JS float rounding so they add up perfectly for the teacher
         let totalOut = parseFloat((eHeat + eOut).toFixed(2)); 
 
         outIn.innerText = eIn.toFixed(2) + " eV";
@@ -309,90 +347,142 @@
         outOut.innerText = eOut.toFixed(2) + " eV";
         outCheck.innerText = totalOut.toFixed(2) + " eV";
 
-        let colorOut = waveToRGB(state.waveOut);
-        outWaveOut.innerHTML = `${state.waveOut.toFixed(0)} nm <span class="color-preview" style="background:${colorOut}"></span>`;
-        outWaveOut.style.color = colorOut;
+        if (state.energyOut === 0) {
+            outWaveOut.innerHTML = `NONE (Dud) <span class="color-preview" style="background:#000"></span>`;
+            outWaveOut.style.color = "#888";
+            barOut.style.backgroundColor = "#444";
+        } else {
+            let colorOut = waveToRGB(state.waveOut);
+            outWaveOut.innerHTML = `${state.waveOut.toFixed(0)} nm <span class="color-preview" style="background:${colorOut}"></span>`;
+            outWaveOut.style.color = colorOut;
+            barOut.style.backgroundColor = colorOut;
+        }
 
         barIn.style.width = "100%";
         barHeat.style.width = ((eHeat / eIn) * 100) + "%";
         barOut.style.width = ((eOut / eIn) * 100) + "%";
-        barOut.style.backgroundColor = colorOut;
     }
 
-    [slWaveIn, slHeat].forEach(el => {
+    [slWaveIn, slHeat, slQY].forEach(el => {
         el.addEventListener('input', () => {
-            if (state.phase === 0) calculatePhysics();
+            if (state.phase === 0) {
+                calculatePhysics(false); // Always show ideal prediction while idle
+            }
         });
     });
 
     function firePhoton() {
         if (state.phase !== 0) return;
-        calculatePhysics();
-        updateTelemetry();
+        
+        // Quantum Yield Die Roll
+        const qyChance = parseFloat(slQY.value) / 100;
+        state.isDud = Math.random() > qyChance;
+        
+        // Calculate angles (0 rad is directly right)
+        if (chkIso.checked) {
+            state.outAngle = Math.random() * Math.PI * 2; 
+        } else {
+            state.outAngle = 0; 
+        }
+
+        calculatePhysics(false); 
+        statusDisplay.innerText = "STATUS: PHOTON INCOMING";
+        statusDisplay.style.backgroundColor = "#8e44ad";
         
         state.phase = 1;
-        state.xPhotonIn = 0;
-        state.xPhotonOut = canvas.width / 2;
+        state.photonDistance = -200; // Start outside left
         state.time = 0;
-        state.jElectronY = 250; // Ground state S0
+        state.jElectronY = 250; 
         state.dyeJiggle = 0;
         btnFire.disabled = true;
     }
 
-    // Drawing helper for photons (sine wave)
-    function drawPhoton(ctx, xCenter, yCenter, wavelength, color) {
+    // Rotatable drawing function for isotropic emission
+    function drawPhoton(ctx, xCenter, yCenter, distance, angle, wavelength, color) {
+        ctx.save();
+        ctx.translate(xCenter, yCenter);
+        ctx.rotate(angle);
+        
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         const amplitude = 15;
-        // Frequency is inversely proportional to wavelength visually
         const frequency = 50 / wavelength; 
         
+        // Draw the squiggly line centered around 'distance' along the local X axis
         for (let x = -30; x <= 30; x++) {
             let y = Math.sin((x - state.time * 200) * frequency) * amplitude;
-            if (x === -30) ctx.moveTo(xCenter + x, yCenter + y);
-            else ctx.lineTo(xCenter + x, yCenter + y);
+            if (x === -30) ctx.moveTo(distance + x, y);
+            else ctx.lineTo(distance + x, y);
         }
         ctx.stroke();
+        ctx.restore();
     }
 
     function loop(timestamp) {
         let dt = 0.016; 
         state.time += dt;
 
+        const moleculeX = canvas.width / 2;
+        const moleculeY = 150;
+        const jS0_Y = 250; 
+        const jS1_Y = jS0_Y - (state.energyIn * 40); 
+        const jS1_Relaxed_Y = jS1_Y + ((state.energyIn * (parseFloat(slHeat.value)/100)) * 40); 
+
         // ----------------------------------------------------
         // LOGIC PHASE MACHINE
         // ----------------------------------------------------
-        const moleculeX = canvas.width / 2;
-        const jS0_Y = 250; // Jablonski Ground State
-        const jS1_Y = jS0_Y - (state.energyIn * 40); // Excited State
-        const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); // Vibrational drop
-
         if (state.phase === 1) { // Incoming
-            state.xPhotonIn += 300 * dt;
-            if (state.xPhotonIn >= moleculeX) {
+            state.photonDistance += 300 * dt;
+            if (state.photonDistance >= 0) {
                 state.phase = 2;
                 state.time = 0;
-                state.jElectronY = jS1_Y; // Instant jump
+                state.jElectronY = jS1_Y; 
+                
+                if (state.isDud) {
+                    calculatePhysics(true); // Force 100% heat update on UI
+                    statusDisplay.innerText = "STATUS: NON-RADIATIVE DECAY (HEAT ONLY)";
+                    statusDisplay.style.backgroundColor = "#c0392b";
+                } else {
+                    statusDisplay.innerText = "STATUS: EXCITED (VIBRATING)";
+                    statusDisplay.style.backgroundColor = "#d35400";
+                }
             }
         } else if (state.phase === 2) { // Vibrational Relaxation (Heat)
-            state.dyeJiggle = Math.sin(state.time * 50) * 5; // Shake molecule
+            state.dyeJiggle = Math.sin(state.time * 50) * (state.isDud ? 10 : 5); // Shake harder if dud
             
-            // Slowly step down the Jablonski vibrational "stairs"
-            if (state.jElectronY < jS1_Relaxed_Y) {
-                state.jElectronY += 30 * dt;
+            // Step down the Jablonski stairs
+            let targetY = state.isDud ? jS0_Y : jS1_Relaxed_Y;
+            let dropSpeed = state.isDud ? 60 : 30; // Fall faster if totally crashing
+
+            if (state.jElectronY < targetY) {
+                state.jElectronY += dropSpeed * dt;
             }
 
-            if (state.time > 1.5) { // Hold for drama
-                state.phase = 3;
-                state.dyeJiggle = 0;
-                state.jElectronY = jS0_Y; // Drop back to ground
+            if (state.time > 1.5) { 
+                if (state.isDud) {
+                    state.phase = 0; // Skip emission completely
+                    state.dyeJiggle = 0;
+                    btnFire.disabled = false;
+                    statusDisplay.innerText = "STATUS: IDLE";
+                    statusDisplay.style.backgroundColor = "#2c3e50";
+                    calculatePhysics(false); // Reset prediction UI
+                } else {
+                    state.phase = 3;
+                    state.dyeJiggle = 0;
+                    state.jElectronY = jS0_Y; 
+                    state.photonDistance = 0;
+                    statusDisplay.innerText = "STATUS: EMISSION!";
+                    statusDisplay.style.backgroundColor = "#27ae60";
+                }
             }
         } else if (state.phase === 3) { // Emission
-            state.xPhotonOut += 300 * dt;
-            if (state.xPhotonOut > canvas.width + 50) {
+            state.photonDistance += 300 * dt;
+            if (state.photonDistance > 300) { // Off screen
                 state.phase = 0;
                 btnFire.disabled = false;
+                statusDisplay.innerText = "STATUS: IDLE";
+                statusDisplay.style.backgroundColor = "#2c3e50";
             }
         }
 
@@ -402,26 +492,26 @@
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Flashlight
+        // Flashlight (Left Side)
         ctx.fillStyle = '#555';
-        ctx.fillRect(10, 140, 40, 20);
+        ctx.fillRect(10, moleculeY - 10, 40, 20);
         ctx.fillStyle = '#888';
-        ctx.fillRect(50, 135, 10, 30);
+        ctx.fillRect(50, moleculeY - 15, 10, 30);
 
         // Dye Molecule
         ctx.beginPath();
-        ctx.arc(moleculeX + state.dyeJiggle, 150, 25, 0, Math.PI * 2);
+        ctx.arc(moleculeX + state.dyeJiggle, moleculeY, 25, 0, Math.PI * 2);
         
         if (state.phase === 2) {
-            ctx.fillStyle = '#e67e22'; // Hot
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#e67e22';
+            ctx.fillStyle = state.isDud ? '#c0392b' : '#e67e22'; 
+            ctx.shadowBlur = state.isDud ? 30 : 20;
+            ctx.shadowColor = state.isDud ? '#c0392b' : '#e67e22';
         } else {
-            ctx.fillStyle = '#2c3e50'; // Cold
+            ctx.fillStyle = '#2c3e50'; 
             ctx.shadowBlur = 0;
         }
         ctx.fill();
-        ctx.shadowBlur = 0; // reset
+        ctx.shadowBlur = 0; 
         
         ctx.strokeStyle = '#7f8c8d';
         ctx.lineWidth = 2;
@@ -429,16 +519,16 @@
 
         // Draw Photons
         if (state.phase === 1) {
-            drawPhoton(ctx, state.xPhotonIn, 150, state.waveIn, waveToRGB(state.waveIn));
+            drawPhoton(ctx, moleculeX, moleculeY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
         } else if (state.phase === 3) {
-            drawPhoton(ctx, state.xPhotonOut, 150, state.waveOut, waveToRGB(state.waveOut));
+            drawPhoton(ctx, moleculeX, moleculeY, state.photonDistance, state.outAngle, state.waveOut, waveToRGB(state.waveOut));
         }
 
         // Heat waves
         if (state.phase === 2) {
-            ctx.strokeStyle = `rgba(230, 126, 34, ${1 - (state.time/1.5)})`;
+            ctx.strokeStyle = state.isDud ? `rgba(192, 57, 43, ${1 - (state.time/1.5)})` : `rgba(230, 126, 34, ${1 - (state.time/1.5)})`;
             ctx.beginPath();
-            ctx.arc(moleculeX + state.dyeJiggle, 150, 25 + state.time * 30, 0, Math.PI * 2);
+            ctx.arc(moleculeX + state.dyeJiggle, moleculeY, 25 + state.time * (state.isDud ? 50 : 30), 0, Math.PI * 2);
             ctx.stroke();
         }
 
@@ -478,8 +568,8 @@
 
         // Draw Electron
         let eX = 100;
-        if (state.phase === 2) eX = 200; // Shift right during heat loss
-        if (state.phase === 3) eX = 300; // Shift right for drop
+        if (state.phase === 2) eX = 200; 
+        if (state.phase === 3) eX = 300; 
         
         jCtx.beginPath();
         jCtx.arc(eX, state.phase === 0 ? jS0_Y : state.jElectronY, 8, 0, Math.PI * 2);
@@ -489,14 +579,18 @@
         jCtx.stroke();
 
         // Draw Energy Arrows
-        if (state.phase === 1) { // Absorption Arrow
+        if (state.phase === 1) { 
             jCtx.strokeStyle = waveToRGB(state.waveIn);
             jCtx.setLineDash([]);
             drawArrow(jCtx, 100, jS0_Y, 100, jS1_Y);
-        } else if (state.phase === 2) { // Heat Arrow
-            jCtx.strokeStyle = '#e67e22';
+        } else if (state.phase === 2) { 
+            jCtx.strokeStyle = state.isDud ? '#c0392b' : '#e67e22';
             drawArrow(jCtx, 200, jS1_Y, 200, state.jElectronY);
-        } else if (state.phase === 3) { // Emission Arrow
+            if (state.isDud) {
+                jCtx.fillStyle = '#c0392b';
+                jCtx.fillText("NON-RADIATIVE DECAY", 220, (jS1_Y + state.jElectronY)/2);
+            }
+        } else if (state.phase === 3) { 
             jCtx.strokeStyle = waveToRGB(state.waveOut);
             drawArrow(jCtx, 300, jS1_Relaxed_Y, 300, jS0_Y);
         }
@@ -518,7 +612,7 @@
         ctx.stroke();
     }
 
-    calculatePhysics();
+    calculatePhysics(false);
     requestAnimationFrame(loop);
 
 </script>
