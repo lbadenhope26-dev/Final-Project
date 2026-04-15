@@ -92,6 +92,10 @@
         input[type="range"] {
             width: 100%; accent-color: var(--accent); cursor: pointer;
         }
+        
+        input:disabled, select:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
 
         select {
             background-color: #0f172a; color: #fff; border: 1px solid var(--border);
@@ -111,7 +115,7 @@
             font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
             transition: all 0.2s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
         }
-        button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        button:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
         button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
 
         .status-box {
@@ -244,7 +248,7 @@
     };
 
     const HC = 1240; 
-    let particles = []; // Particle engine for heat loss
+    let particles = []; 
 
     const dyePresets = {
         'fluorescein': { wave: 490, heat: 5, qy: 90 },
@@ -261,8 +265,17 @@
         energyIn: 0, energyHeat: 0, energyOut: 0,
         waveIn: 0, waveOut: 0,
         photonDistance: 0, outAngle: 0, isDud: false, 
-        jElectronX: 120, jElectronY: 280, dyeJiggle: 0, holdTime: 0         
+        jElectronX: 120, jElectronY: 310, dyeJiggle: 0, holdTime: 0         
     };
+
+    function toggleControls(disabled) {
+        elements.selDye.disabled = disabled;
+        elements.slWaveIn.disabled = disabled;
+        elements.slHeat.disabled = disabled;
+        elements.slQY.disabled = disabled;
+        elements.chkIso.disabled = disabled;
+        elements.btnFire.disabled = disabled;
+    }
 
     function waveToRGB(W) {
         let R, G, B;
@@ -279,16 +292,20 @@
 
     function calculatePhysics(forceDudOverride = false) {
         state.waveIn = parseFloat(elements.slWaveIn.value);
-        state.energyIn = HC / state.waveIn;
+        const rawEnergyIn = HC / state.waveIn;
         const heatLossPct = parseFloat(elements.slHeat.value) / 100;
+        
+        // BUG FIX: Strict rounding to 2 decimal places to ensure visual energy conservation
+        state.energyIn = Math.round(rawEnergyIn * 100) / 100;
         
         if (forceDudOverride) {
             state.energyHeat = state.energyIn;
-            state.energyOut = 0; state.waveOut = 0; 
+            state.energyOut = 0; 
+            state.waveOut = 0; 
         } else {
-            state.energyHeat = state.energyIn * heatLossPct;
-            state.energyOut = state.energyIn - state.energyHeat; 
-            state.waveOut = HC / state.energyOut;
+            state.energyHeat = Math.round((state.energyIn * heatLossPct) * 100) / 100;
+            state.energyOut = Math.round((state.energyIn - state.energyHeat) * 100) / 100; 
+            state.waveOut = state.energyOut > 0 ? HC / state.energyOut : 0;
         }
 
         const colorIn = waveToRGB(state.waveIn);
@@ -316,7 +333,6 @@
         elements.barOut.style.width = ((state.energyOut / state.energyIn) * 100) + "%";
     }
 
-    // Event Listeners
     elements.selDye.addEventListener('change', (e) => {
         if (e.target.value !== 'custom') {
             const p = dyePresets[e.target.value];
@@ -339,20 +355,15 @@
         elements.statusDisplay.style.backgroundColor = "#4c1d95";
         elements.statusDisplay.style.color = "#c4b5fd";
         
-        state.phase = 1; state.photonDistance = -300; state.time = 0;
-        state.jElectronX = 120; state.jElectronY = 280; state.dyeJiggle = 0;
-        elements.btnFire.disabled = true;
-        particles = []; // clear particles
+        toggleControls(true); // BUG FIX: Lock controls during animation
+        
+        state.phase = 1; state.photonDistance = -300; state.time = 0; state.holdTime = 0;
+        state.jElectronX = 120; state.jElectronY = 310; state.dyeJiggle = 0;
+        particles = []; 
     }
 
     function spawnHeatParticle(x, y) {
-        particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 150,
-            vy: (Math.random() - 0.5) * 150,
-            life: 1.0,
-            size: Math.random() * 3 + 2
-        });
+        particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 150, vy: (Math.random() - 0.5) * 150, life: 1.0, size: Math.random() * 3 + 2 });
     }
 
     function drawPhoton(ctx, xC, yC, dist, angle, wave, color) {
@@ -363,10 +374,9 @@
         
         const freq = 40 / wave; 
         for (let x = -40; x <= 40; x += 2) {
-            let env = Math.exp(-(x*x)/400); // Gaussian envelope to make it look like a packet
+            let env = Math.exp(-(x*x)/400); 
             let y = Math.sin((x - state.time * 300) * freq) * 15 * env;
-            if (x === -40) ctx.moveTo(dist + x, y);
-            else ctx.lineTo(dist + x, y);
+            if (x === -40) ctx.moveTo(dist + x, y); else ctx.lineTo(dist + x, y);
         }
         ctx.stroke(); ctx.restore();
     }
@@ -380,11 +390,11 @@
         state.time += dt;
 
         const molX = canvas.width / 2; const molY = 150;
-        const jS0_Y = 280; 
-        const jS1_Y = jS0_Y - (state.energyIn * 40); 
-        const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); 
+        
+        const jS0_Y = 310; 
+        const jS1_Y = jS0_Y - (state.energyIn * 55); 
+        const jS1_Relaxed_Y = Math.min(jS0_Y - 15, jS1_Y + Math.max(40, state.energyHeat * 55)); 
 
-        // ----- STATE MACHINE -----
         if (state.phase === 1) { 
             state.photonDistance += 400 * dt;
             if (state.photonDistance >= 0) {
@@ -394,7 +404,7 @@
         else if (state.phase === 1.5) { 
             state.jElectronY -= ((jS0_Y - jS1_Y) / 0.15) * dt;
             if (state.jElectronY <= jS1_Y) {
-                state.jElectronY = jS1_Y; state.phase = 2; state.holdTime = 0;
+                state.jElectronY = jS1_Y; state.phase = 2; state.holdTime = 0; // Reset holdTime for accurate ripple/jiggle
                 
                 if (state.isDud) {
                     calculatePhysics(true); 
@@ -409,11 +419,11 @@
             }
         } 
         else if (state.phase === 2) { 
-            state.dyeJiggle = Math.sin(state.time * 60) * (state.isDud ? 12 : 6); 
+            state.holdTime += dt;
+            state.dyeJiggle = Math.sin(state.holdTime * 60) * (state.isDud ? 12 : 6); 
             
-            // Spawn particles during relaxation
             if(Math.random() < (state.isDud ? 0.6 : 0.3)) spawnHeatParticle(molX + state.dyeJiggle, molY);
-            if(Math.random() < 0.2) spawnHeatParticle(state.jElectronX, state.jElectronY); // On diagram too!
+            if(Math.random() < 0.2) spawnHeatParticle(state.jElectronX, state.jElectronY); 
 
             let targetY = state.isDud ? jS0_Y : jS1_Relaxed_Y;
             
@@ -426,8 +436,7 @@
             }
 
             if (state.jElectronY === targetY && state.jElectronX >= 250) {
-                state.holdTime += dt;
-                if (state.holdTime > 0.3) { 
+                if (state.holdTime > 1.0) { // Keep hold time logic intact
                     state.phase = state.isDud ? 4 : 2.5; 
                     state.dyeJiggle = 0;
                 }
@@ -453,7 +462,8 @@
         else if (state.phase === 4) { 
             state.jElectronX -= 600 * dt;
             if (state.jElectronX <= 120) {
-                state.jElectronX = 120; state.phase = 0; elements.btnFire.disabled = false;
+                state.jElectronX = 120; state.phase = 0; 
+                toggleControls(false); // BUG FIX: Unlock controls
                 elements.statusDisplay.innerText = "SYSTEM IDLE";
                 elements.statusDisplay.style.backgroundColor = "#0f172a";
                 elements.statusDisplay.style.color = "#e2e8f0";
@@ -461,18 +471,25 @@
             }
         }
 
-        // ----- UPDATE PARTICLES -----
         particles.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt*1.5; });
         particles = particles.filter(p => p.life > 0);
 
-        // ----- RENDER LEFT CANVAS (Physical) -----
         ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw device
         ctx.fillStyle = '#334155'; ctx.fillRect(20, molY - 15, 60, 30);
         ctx.fillStyle = '#475569'; ctx.fillRect(80, molY - 5, 20, 10);
         
-        // Draw Molecule
+        // BUG FIX: Accurate Ripple tied to phase holdTime
+        if (state.phase === 2 && state.holdTime > 0) {
+            let rippleRadius = 30 + (state.holdTime * 80);
+            let rippleAlpha = Math.max(0, 1 - (state.holdTime * 1.5));
+            if (rippleAlpha > 0) {
+                ctx.beginPath(); ctx.arc(molX, molY, rippleRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${rippleAlpha})`;
+                ctx.lineWidth = 2; ctx.stroke();
+            }
+        }
+
         ctx.beginPath(); ctx.arc(molX + state.dyeJiggle, molY, 30, 0, Math.PI * 2);
         if (state.phase >= 1.5 && state.phase < 3) {
             let g = ctx.createRadialGradient(molX+state.dyeJiggle, molY, 0, molX+state.dyeJiggle, molY, 40);
@@ -484,93 +501,16 @@
         ctx.strokeStyle = (state.phase >= 1.5 && state.phase < 3) ? '#f8fafc' : '#64748b';
         ctx.lineWidth = 3; ctx.stroke();
 
-        // Render Particles
         particles.forEach(p => {
             ctx.fillStyle = `rgba(251, 146, 60, ${p.life})`;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
         });
 
-        // Render Photons
         if (state.phase === 1) drawPhoton(ctx, molX, molY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
         else if (state.phase === 3) drawPhoton(ctx, molX, molY, state.photonDistance, state.outAngle, state.waveOut, waveToRGB(state.waveOut));
 
-        // ----- RENDER RIGHT CANVAS (Jablonski) -----
         jCtx.fillStyle = '#050505'; jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
 
-        // Draw Energy States
         jCtx.lineWidth = 3; jCtx.font = "bold 14px sans-serif";
         
-        // S0 Ground
-        jCtx.strokeStyle = '#475569'; jCtx.beginPath(); jCtx.moveTo(60, jS0_Y); jCtx.lineTo(540, jS0_Y); jCtx.stroke();
-        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 22);
-
-        // S1 Excited
-        jCtx.strokeStyle = '#64748b'; jCtx.beginPath(); jCtx.moveTo(60, jS1_Y); jCtx.lineTo(300, jS1_Y); jCtx.stroke();
-        jCtx.fillText("S1 (Excited State)", 60, jS1_Y - 12);
-
-        // Vibrational Levels (Internal Conversion)
-        if (!state.isDud) {
-            jCtx.lineWidth = 2; jCtx.strokeStyle = '#334155';
-            for(let v = 1; v <= 4; v++) {
-                let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
-                jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(400, vy); jCtx.stroke();
-            }
-            jCtx.lineWidth = 3; jCtx.strokeStyle = '#059669';
-            jCtx.beginPath(); jCtx.moveTo(200, jS1_Relaxed_Y); jCtx.lineTo(540, jS1_Relaxed_Y); jCtx.stroke();
-            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0 (Relaxed)", 440, jS1_Relaxed_Y - 10);
-        }
-
-        // Draw Arrows
-        function drawJArrow(fx, fy, tx, ty, color, dash=false) {
-            jCtx.strokeStyle = color; jCtx.lineWidth = 3;
-            if(dash) jCtx.setLineDash([6, 6]); else jCtx.setLineDash([]);
-            jCtx.beginPath(); jCtx.moveTo(fx, fy); jCtx.lineTo(tx, ty); jCtx.stroke();
-            jCtx.setLineDash([]);
-            
-            let ang = Math.atan2(ty-fy, tx-fx);
-            jCtx.beginPath(); jCtx.moveTo(tx, ty);
-            jCtx.lineTo(tx - 12*Math.cos(ang - Math.PI/6), ty - 12*Math.sin(ang - Math.PI/6));
-            jCtx.lineTo(tx - 12*Math.cos(ang + Math.PI/6), ty - 12*Math.sin(ang + Math.PI/6));
-            jCtx.fillStyle = color; jCtx.fill();
-        }
-
-        if (state.phase === 1 || state.phase === 1.5) { 
-            drawJArrow(120, jS0_Y, 120, jS1_Y, waveToRGB(state.waveIn));
-        } else if (state.phase === 2) { 
-            let jCol = state.isDud ? '#ef4444' : '#f59e0b';
-            drawJArrow(120, jS1_Y, 250, state.isDud ? jS0_Y : jS1_Relaxed_Y, jCol, true); 
-            jCtx.fillStyle = jCol;
-            jCtx.fillText(state.isDud ? "Non-Radiative Decay" : "Internal Conversion", 260, (jS1_Y + jS0_Y)/2);
-        } else if (state.phase === 3) { 
-            drawJArrow(450, jS1_Relaxed_Y, 450, jS0_Y, waveToRGB(state.waveOut)); 
-        }
-
-        // Draw Jablonski Particles
-        particles.forEach(p => {
-            if (p.x < 300) { // Only draw particles spawned on diagram side
-                jCtx.fillStyle = `rgba(251, 146, 60, ${p.life})`;
-                jCtx.beginPath(); jCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); jCtx.fill();
-            }
-        });
-
-        // Draw Electron
-        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 10, 0, Math.PI * 2);
-        jCtx.fillStyle = '#38bdf8'; jCtx.fill();
-        jCtx.shadowBlur = 15; jCtx.shadowColor = '#38bdf8';
-        jCtx.strokeStyle = '#fff'; jCtx.lineWidth = 2; jCtx.stroke();
-        jCtx.shadowBlur = 0;
-
-        requestAnimationFrame(loop);
-    }
-
-    // Init
-    elements.selDye.value = 'fluorescein';
-    elements.slWaveIn.value = dyePresets['fluorescein'].wave;
-    elements.slHeat.value = dyePresets['fluorescein'].heat;
-    elements.slQY.value = dyePresets['fluorescein'].qy;
-    calculatePhysics(false);
-    requestAnimationFrame(loop);
-
-</script>
-</body>
-</html>
+        jCtx.strokeStyle = '#475569'; jCtx.beginPath(); jCtx.
