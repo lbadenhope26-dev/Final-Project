@@ -250,7 +250,6 @@
     const jCanvas = document.getElementById('jablonskiCanvas');
     const jCtx = jCanvas.getContext('2d');
 
-    // UI Elements
     const slWaveIn = document.getElementById('sl-wave-in');
     const slHeat = document.getElementById('sl-heat');
     const slQY = document.getElementById('sl-qy');
@@ -268,11 +267,10 @@
     const barHeat = document.getElementById('bar-heat');
     const barOut = document.getElementById('bar-out');
 
-    // Physics Constants
-    const HC = 1240; // Planck's constant * speed of light (eV * nm)
+    const HC = 1240; 
 
     let state = {
-        phase: 0, // 0: Idle, 1: Incoming, 2: Jiggling (Heat), 3: Outgoing
+        phase: 0, 
         time: 0,
         energyIn: 0,
         energyHeat: 0,
@@ -283,7 +281,9 @@
         outAngle: 0, 
         isDud: false, 
         jElectronY: 0, 
-        dyeJiggle: 0
+        dyeJiggle: 0,
+        reachedTarget: false, // Strict positional lock flag
+        holdTime: 0         // Timer that ONLY runs once the ball is on the line
     };
 
     function waveToRGB(Wavelength) {
@@ -412,15 +412,23 @@
         ctx.restore();
     }
 
+    let lastTime = performance.now();
+
     function loop(timestamp) {
-        let dt = 0.016; 
+        // Calculate true real-world delta-time regardless of monitor refresh rate
+        let dt = (timestamp - lastTime) / 1000; 
+        lastTime = timestamp;
+        if (dt > 0.1) dt = 0.1; // Cap at 100ms max to prevent massive jumps if tab was minimized
+
         state.time += dt;
 
         const moleculeX = canvas.width / 2;
         const moleculeY = 150;
+        
+        // Physics constants strictly locked to the state (slider moves won't break animation)
         const jS0_Y = 250; 
         const jS1_Y = jS0_Y - (state.energyIn * 40); 
-        const jS1_Relaxed_Y = jS1_Y + ((state.energyIn * (parseFloat(slHeat.value)/100)) * 40); 
+        const jS1_Relaxed_Y = jS1_Y + (state.energyHeat * 40); 
 
         // ----------------------------------------------------
         // LOGIC PHASE MACHINE
@@ -431,6 +439,8 @@
                 state.phase = 2;
                 state.time = 0;
                 state.jElectronY = jS1_Y; 
+                state.reachedTarget = false; 
+                state.holdTime = 0;
                 
                 if (state.isDud) {
                     calculatePhysics(true); 
@@ -444,35 +454,43 @@
         } else if (state.phase === 2) { // Vibrational Relaxation (Heat)
             state.dyeJiggle = Math.sin(state.time * 50) * (state.isDud ? 10 : 5); 
             
-            // Define exactly where the electron needs to land
             let targetY = state.isDud ? jS0_Y : jS1_Relaxed_Y;
+            let dropSpeed = Math.max(50, (targetY - jS1_Y) / 1.0); // Will take ~1 second to fall
             
-            // Calculate a drop speed so it always takes roughly 1 second to fall, regardless of distance
-            let dropSpeed = (targetY - jS1_Y) / 1.0; 
-
-            // Move the electron down
+            // 1. Move electron down
             if (state.jElectronY < targetY) {
                 state.jElectronY += dropSpeed * dt;
-            } else {
-                state.jElectronY = targetY; // Lock perfectly to the target line to prevent floating math errors
+            } 
+            
+            // 2. Strict Positional Lock
+            if (state.jElectronY >= targetY) {
+                state.jElectronY = targetY; // Snap perfectly to the line
+                if (!state.reachedTarget) {
+                    state.reachedTarget = true; // Flag that we have arrived
+                    state.holdTime = 0; // Start the pause timer
+                }
             }
 
-            // STRICT POSITIONAL LOCK: Only advance when the ball is literally on the line
-            if (state.jElectronY >= targetY && state.time > 1.2) { 
-                if (state.isDud) {
-                    state.phase = 0; 
-                    state.dyeJiggle = 0;
-                    btnFire.disabled = false;
-                    statusDisplay.innerText = "STATUS: IDLE";
-                    statusDisplay.style.backgroundColor = "#2c3e50";
-                    calculatePhysics(false); 
-                } else {
-                    state.phase = 3;
-                    state.dyeJiggle = 0;
-                    state.jElectronY = jS0_Y; 
-                    state.photonDistance = 0;
-                    statusDisplay.innerText = "STATUS: EMISSION!";
-                    statusDisplay.style.backgroundColor = "#27ae60";
+            // 3. Pause and Wait (Only runs if perfectly on the line)
+            if (state.reachedTarget) {
+                state.holdTime += dt;
+                
+                if (state.holdTime > 0.4) { // Hold for a 400ms visual pause on the line
+                    if (state.isDud) {
+                        state.phase = 0; 
+                        state.dyeJiggle = 0;
+                        btnFire.disabled = false;
+                        statusDisplay.innerText = "STATUS: IDLE";
+                        statusDisplay.style.backgroundColor = "#2c3e50";
+                        calculatePhysics(false); 
+                    } else {
+                        state.phase = 3;
+                        state.dyeJiggle = 0;
+                        state.jElectronY = jS0_Y; 
+                        state.photonDistance = 0;
+                        statusDisplay.innerText = "STATUS: EMISSION!";
+                        statusDisplay.style.backgroundColor = "#27ae60";
+                    }
                 }
             }
         } else if (state.phase === 3) { // Emission
@@ -543,19 +561,22 @@
         jCtx.beginPath(); jCtx.moveTo(50, jS1_Y); jCtx.lineTo(250, jS1_Y); jCtx.stroke();
         jCtx.fillText("Excited State (S1)", 50, jS1_Y - 10);
 
-        jCtx.lineWidth = 1;
-        jCtx.setLineDash([5, 5]);
-        for(let v = 1; v <= 5; v++) {
-            let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
-            if(vy <= jS1_Relaxed_Y) {
-                jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(350, vy); jCtx.stroke();
+        // Only draw the green S1 Relaxed stairs if it's NOT a dud
+        if (!state.isDud) {
+            jCtx.lineWidth = 1;
+            jCtx.setLineDash([5, 5]);
+            for(let v = 1; v <= 5; v++) {
+                let vy = jS1_Y + (v * ((jS1_Relaxed_Y - jS1_Y)/5));
+                if(vy <= jS1_Relaxed_Y) {
+                    jCtx.beginPath(); jCtx.moveTo(150, vy); jCtx.lineTo(350, vy); jCtx.stroke();
+                }
             }
+            jCtx.setLineDash([]);
+            
+            jCtx.lineWidth = 3;
+            jCtx.strokeStyle = '#2ecc71';
+            jCtx.beginPath(); jCtx.moveTo(150, jS1_Relaxed_Y); jCtx.lineTo(400, jS1_Relaxed_Y); jCtx.stroke();
         }
-        jCtx.setLineDash([]);
-        
-        jCtx.lineWidth = 3;
-        jCtx.strokeStyle = '#2ecc71';
-        jCtx.beginPath(); jCtx.moveTo(150, jS1_Relaxed_Y); jCtx.lineTo(400, jS1_Relaxed_Y); jCtx.stroke();
 
         let eX = 100;
         if (state.phase === 2) eX = 200; 
