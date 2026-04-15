@@ -14,76 +14,81 @@
             --border: #334155;
         }
 
+        /* LOCKED TO VIEWPORT TO PREVENT SCROLLING */
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            padding: 30px 20px;
+            align-items: center;
+            height: 100vh;
             margin: 0;
-            line-height: 1.5;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            overflow: hidden; 
+            line-height: 1.4;
         }
 
         .container {
             display: flex;
-            gap: 25px;
-            max-width: 1500px;
+            gap: 15px;
+            max-width: 1400px;
             width: 100%;
+            max-height: 100%;
         }
 
         .canvas-col {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             flex: 1;
+            justify-content: center;
         }
 
         .canvas-wrapper {
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
         canvas {
             background-color: #000;
-            border-radius: 8px;
+            border-radius: 6px;
             width: 100%;
             display: block;
         }
 
         .graph-header {
-            font-size: 0.95em;
+            font-size: 0.85em;
             font-weight: 600;
             color: #94a3b8;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            display: flex;
-            justify-content: space-between;
         }
 
         .panel {
             background-color: var(--bg-panel);
-            padding: 25px;
+            padding: 15px 20px;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            width: 380px;
+            border-radius: 10px;
+            width: 340px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
-        h3 { margin: 0; color: #fff; font-size: 1.2em; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        h3 { margin: 0; color: #fff; font-size: 1.05em; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
 
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
         
         .control-group label {
             display: flex; justify-content: space-between;
-            font-size: 0.85em; font-weight: 500; color: #cbd5e1;
+            font-size: 0.8em; font-weight: 500; color: #cbd5e1;
         }
 
         input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
@@ -91,47 +96,48 @@
 
         select {
             background-color: #0f172a; color: #fff; border: 1px solid var(--border);
-            padding: 10px; border-radius: 6px; font-family: inherit; cursor: pointer;
-            width: 100%; transition: border-color 0.2s;
+            padding: 8px; border-radius: 6px; font-family: inherit; cursor: pointer;
+            width: 100%; font-size: 0.85em; transition: border-color 0.2s;
         }
         select:focus { outline: none; border-color: var(--accent); }
 
         .checkbox-group {
-            display: flex; align-items: center; gap: 10px;
-            background: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+            background: #0f172a; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);
         }
+        .checkbox-group label { margin: 0; cursor: pointer; color: #fff; font-size: 0.85em; }
         
         button {
             background-color: var(--accent); color: white; border: none;
-            padding: 14px; border-radius: 6px; cursor: pointer;
-            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-            transition: all 0.2s; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            padding: 10px; border-radius: 6px; cursor: pointer;
+            font-weight: 700; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
         }
         button:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
         button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
 
         .status-box {
-            background-color: #0f172a; border: 1px solid var(--border); padding: 12px;
+            background-color: #0f172a; border: 1px solid var(--border); padding: 8px;
             border-radius: 6px; text-align: center; font-weight: bold;
-            font-size: 0.85em; letter-spacing: 1px; transition: background-color 0.3s;
+            font-size: 0.75em; letter-spacing: 1px; transition: background-color 0.3s;
         }
 
         .readout {
-            background-color: #0f172a; padding: 15px; border-radius: 6px;
-            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em;
-            display: flex; flex-direction: column; gap: 12px; border: 1px solid var(--border);
+            background-color: #0f172a; padding: 10px; border-radius: 6px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8em;
+            display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border);
         }
         .readout div { display: flex; justify-content: space-between; align-items: center; }
         .readout span { font-size: 1.1em; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
         .color-preview {
-            display: inline-block; width: 16px; height: 16px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 8px currentColor;
+            display: inline-block; width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 6px currentColor;
         }
 
-        .bar-container { width: 100%; height: 24px; background-color: #0f172a; border-radius: 4px; position: relative; border: 1px solid var(--border); overflow: hidden; }
+        .bar-container { width: 100%; height: 18px; background-color: #0f172a; border-radius: 4px; position: relative; border: 1px solid var(--border); overflow: hidden; }
         .bar { height: 100%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bar-label { position: absolute; top: 0; left: 8px; font-size: 0.75em; font-weight: bold; line-height: 24px; text-shadow: 1px 1px 2px #000; z-index: 2; }
+        .bar-label { position: absolute; top: 0; left: 8px; font-size: 0.7em; font-weight: bold; line-height: 18px; text-shadow: 1px 1px 2px #000; z-index: 2; }
     </style>
 </head>
 <body>
@@ -140,11 +146,11 @@
     <div class="canvas-col">
         <div class="canvas-wrapper">
             <div class="graph-header"><span>Physical Space (Fluorescence)</span></div>
-            <canvas id="simCanvas" width="600" height="300"></canvas>
+            <canvas id="simCanvas" width="600" height="240"></canvas>
         </div>
         <div class="canvas-wrapper">
             <div class="graph-header"><span>Jablonski Energy Diagram</span></div>
-            <canvas id="jablonskiCanvas" width="600" height="350"></canvas>
+            <canvas id="jablonskiCanvas" width="600" height="280"></canvas>
         </div>
     </div>
 
@@ -178,7 +184,7 @@
 
         <div class="checkbox-group">
             <input type="checkbox" id="chk-iso" checked>
-            <label for="chk-iso" style="margin:0; cursor:pointer; color:#fff;">Isotropic Emission (360°)</label>
+            <label for="chk-iso">Isotropic Emission (360°)</label>
         </div>
         
         <button id="btn-fire" onclick="firePhoton()">Fire UV Flashlight</button>
@@ -189,13 +195,13 @@
         <div class="readout">
             <div>Incoming Energy (E = hc/λ): <span id="out-in" style="color:#a78bfa;">0.00 eV</span></div>
             <div>Vibrational Relaxation: <span id="out-heat" style="color:#fb923c;">0.00 eV</span></div>
-            <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+            <div style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;">
                 Emitted Photon: <span id="out-out" style="color:#34d399;">0.00 eV</span>
             </div>
             <div>Emission Wavelength: <span id="out-wave-out" style="display:flex; align-items:center; gap:6px;">--- nm</span></div>
         </div>
 
-        <div class="control-group" style="gap: 12px; margin-top: 5px;">
+        <div class="control-group" style="gap: 8px;">
             <div class="bar-container">
                 <div class="bar" id="bar-in" style="width: 100%; background: linear-gradient(90deg, #6d28d9, #a78bfa);"></div>
                 <div class="bar-label">Excitation Energy</div>
@@ -244,12 +250,13 @@
         'quinine': { wave: 350, heat: 24, qy: 55 }
     };
 
+    // Y-Coordinates updated for smaller canvases
     let state = {
         phase: 0, time: 0,
         energyIn: 0, energyHeat: 0, energyOut: 0,
         waveIn: 0, waveOut: 0,
         photonDistance: 0, outAngle: 0, isDud: false, 
-        jElectronX: 120, jElectronY: 310, dyeJiggle: 0, holdTime: 0         
+        jElectronX: 120, jElectronY: 240, dyeJiggle: 0, holdTime: 0         
     };
 
     function toggleControls(disabled) {
@@ -341,7 +348,7 @@
         toggleControls(true); 
         
         state.phase = 1; state.photonDistance = -300; state.time = 0; state.holdTime = 0;
-        state.jElectronX = 120; state.jElectronY = 310; state.dyeJiggle = 0;
+        state.jElectronX = 120; state.jElectronY = 240; state.dyeJiggle = 0;
     }
 
     function spawnHeatParticle(x, y, isJablonski = false) {
@@ -376,11 +383,11 @@
         if (dt > 0.1) dt = 0.1; 
         state.time += dt;
 
-        const molX = canvas.width / 2; const molY = 150;
+        const molX = canvas.width / 2; const molY = 120; // Adjusted for 240px height
         
-        const jS0_Y = 310; 
-        const jS1_Y = jS0_Y - (state.energyIn * 45); 
-        const jS1_Relaxed_Y = Math.min(jS0_Y - 15, jS1_Y + Math.max(30, state.energyHeat * 45)); 
+        const jS0_Y = 240; // Adjusted for 280px height
+        const jS1_Y = jS0_Y - (state.energyIn * 35); // Scale adjusted to fit
+        const jS1_Relaxed_Y = Math.min(jS0_Y - 15, jS1_Y + Math.max(25, state.energyHeat * 35)); 
 
         if (state.phase === 1) { 
             state.photonDistance += 450 * dt; 
@@ -463,9 +470,9 @@
         if (state.phase === 1) drawPhoton(ctx, molX, molY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
         
         // FLASHLIGHT SHAPE
-        ctx.fillStyle = '#334155'; // Flashlight body
+        ctx.fillStyle = '#334155'; 
         ctx.fillRect(10, molY - 12, 50, 24); 
-        ctx.fillStyle = '#475569'; // Flashlight head
+        ctx.fillStyle = '#475569'; 
         ctx.beginPath();
         ctx.moveTo(60, molY - 12);
         ctx.lineTo(80, molY - 20);
@@ -505,12 +512,12 @@
         // --- RENDER JABLONSKI CANVAS ---
         jCtx.fillStyle = '#050505'; jCtx.fillRect(0, 0, jCanvas.width, jCanvas.height);
 
-        jCtx.lineWidth = 3; jCtx.font = "bold 14px sans-serif";
+        jCtx.lineWidth = 3; jCtx.font = "bold 13px sans-serif";
         
         jCtx.strokeStyle = '#475569'; jCtx.beginPath(); jCtx.moveTo(60, jS0_Y); jCtx.lineTo(540, jS0_Y); jCtx.stroke();
-        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 22);
+        jCtx.fillStyle = '#94a3b8'; jCtx.fillText("S0 (Ground State)", 60, jS0_Y + 20);
 
-        const s1LabelY = Math.max(20, jS1_Y - 12);
+        const s1LabelY = Math.max(16, jS1_Y - 10);
         jCtx.strokeStyle = '#64748b'; jCtx.beginPath(); jCtx.moveTo(60, jS1_Y); jCtx.lineTo(300, jS1_Y); jCtx.stroke();
         jCtx.fillText("S1 (Excited State)", 60, s1LabelY);
 
@@ -522,7 +529,7 @@
             }
             jCtx.lineWidth = 3; jCtx.strokeStyle = '#059669';
             jCtx.beginPath(); jCtx.moveTo(200, jS1_Relaxed_Y); jCtx.lineTo(540, jS1_Relaxed_Y); jCtx.stroke();
-            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0 (Relaxed)", 440, jS1_Relaxed_Y - 10);
+            jCtx.fillStyle = '#34d399'; jCtx.fillText("v=0 (Relaxed)", 440, jS1_Relaxed_Y - 8);
         }
 
         function drawJArrow(fx, fy, tx, ty, color, dash=false) {
@@ -537,8 +544,8 @@
             jCtx.setLineDash([]);
             let ang = Math.atan2(ty-fy, tx-fx);
             jCtx.beginPath(); jCtx.moveTo(tx, ty);
-            jCtx.lineTo(tx - 12*Math.cos(ang - Math.PI/6), ty - 12*Math.sin(ang - Math.PI/6));
-            jCtx.lineTo(tx - 12*Math.cos(ang + Math.PI/6), ty - 12*Math.sin(ang + Math.PI/6));
+            jCtx.lineTo(tx - 10*Math.cos(ang - Math.PI/6), ty - 10*Math.sin(ang - Math.PI/6));
+            jCtx.lineTo(tx - 10*Math.cos(ang + Math.PI/6), ty - 10*Math.sin(ang + Math.PI/6));
             jCtx.fill();
             jCtx.restore();
         }
@@ -559,9 +566,9 @@
             jCtx.beginPath(); jCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); jCtx.fill();
         });
 
-        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 10, 0, Math.PI * 2);
+        jCtx.beginPath(); jCtx.arc(state.jElectronX, state.jElectronY, 8, 0, Math.PI * 2);
         jCtx.fillStyle = '#38bdf8'; jCtx.fill();
-        jCtx.shadowBlur = 15; jCtx.shadowColor = '#38bdf8';
+        jCtx.shadowBlur = 12; jCtx.shadowColor = '#38bdf8';
         jCtx.strokeStyle = '#fff'; jCtx.lineWidth = 2; jCtx.stroke();
         jCtx.shadowBlur = 0;
 
