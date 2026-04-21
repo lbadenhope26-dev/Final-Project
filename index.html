@@ -171,6 +171,11 @@
                 <option value="custom">Custom Parameters</option>
                 <option value="dapi">DAPI (UV to Blue)</option>
                 <option value="quinine">Quinine / Tonic Water (UV to Cyan)</option>
+                <option value="hoechst">Hoechst 33342 (UV to Blue)</option>
+                <option value="gfp_wt">Wild-Type GFP (UV to Green)</option>
+                <option value="fura2">Fura-2 (UV to Green)</option>
+                <option value="qdot605">Quantum Dot 605 (UV to Orange)</option>
+                <option value="europium">Europium Chelate (UV to Red)</option>
             </select>
         </div>
         
@@ -254,7 +259,12 @@
     const dyePresets = {
         'assignment': { wave: 350, heat: 32, qy: 100 }, 
         'dapi': { wave: 350, heat: 25, qy: 50 },
-        'quinine': { wave: 350, heat: 24, qy: 55 }
+        'quinine': { wave: 350, heat: 24, qy: 55 },
+        'hoechst': { wave: 350, heat: 24, qy: 40 },
+        'gfp_wt': { wave: 395, heat: 22, qy: 79 },
+        'fura2': { wave: 340, heat: 33, qy: 23 },
+        'qdot605': { wave: 350, heat: 42, qy: 60 },
+        'europium': { wave: 340, heat: 45, qy: 50 }
     };
 
     let state = {
