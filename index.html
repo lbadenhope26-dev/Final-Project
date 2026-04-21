@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fluorescence & The Stokes Shift</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-main: #0f172a;
             --bg-panel: #1e293b;
@@ -20,21 +24,21 @@
             color: var(--text-main);
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            align-items: flex-start;
+            min-height: 100vh;
             margin: 0;
-            padding: 5px 10px;
-            box-sizing: border-box;
-            overflow: hidden; 
+            padding: 20px 10px;
+            overflow-y: auto;
             line-height: 1.3;
         }
 
         .container {
             display: flex;
-            gap: 10px;
-            max-width: 1400px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-width: 1000px;
             width: 100%;
-            max-height: 100%;
         }
 
         .canvas-col {
@@ -42,6 +46,8 @@
             flex-direction: column;
             gap: 10px;
             flex: 1;
+            min-width: 320px;
+            max-width: 600px;
             justify-content: center;
         }
 
@@ -71,19 +77,20 @@
 
         .panel {
             background-color: var(--bg-panel);
-            padding: 10px 15px;
+            padding: 15px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            width: 320px;
+            width: 100%;
+            max-width: 340px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         h3 { margin: 0; color: #fff; font-size: 0.95em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
 
-        .control-group { display: flex; flex-direction: column; gap: 2px; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
         
         .control-group label {
             display: flex; justify-content: space-between;
@@ -95,49 +102,49 @@
 
         select {
             background-color: #0f172a; color: #fff; border: 1px solid var(--border);
-            padding: 6px; border-radius: 4px; font-family: inherit; cursor: pointer;
-            width: 100%; font-size: 0.8em; transition: border-color 0.2s;
+            padding: 8px 6px; border-radius: 4px; font-family: inherit; cursor: pointer;
+            width: 100%; font-size: 0.85em; transition: border-color 0.2s;
         }
         select:focus { outline: none; border-color: var(--accent); }
 
         .checkbox-group {
             display: flex; align-items: center; gap: 6px;
-            background: #0f172a; padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border);
+            background: #0f172a; padding: 8px; border-radius: 4px; border: 1px solid var(--border);
         }
         .checkbox-group label { margin: 0; cursor: pointer; color: #fff; font-size: 0.8em; }
         
         button {
             background-color: var(--accent); color: white; border: none;
-            padding: 8px; border-radius: 4px; cursor: pointer;
+            padding: 10px; border-radius: 4px; cursor: pointer;
             font-weight: 700; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px;
             transition: all 0.2s; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
-            margin-top: 2px;
+            margin-top: 4px;
         }
         button:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
         button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
 
         .status-box {
-            background-color: #0f172a; border: 1px solid var(--border); padding: 6px;
+            background-color: #0f172a; border: 1px solid var(--border); padding: 8px;
             border-radius: 4px; text-align: center; font-weight: bold;
-            font-size: 0.7em; letter-spacing: 1px; transition: background-color 0.3s;
+            font-size: 0.75em; letter-spacing: 1px; transition: background-color 0.3s;
         }
 
         .readout {
-            background-color: #0f172a; padding: 8px; border-radius: 4px;
-            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.75em;
-            display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--border);
+            background-color: #0f172a; padding: 10px; border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8em;
+            display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border);
         }
         .readout div { display: flex; justify-content: space-between; align-items: center; }
         .readout span { font-size: 1.05em; font-weight: bold; text-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
         .color-preview {
-            display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+            display: inline-block; width: 14px; height: 14px; border-radius: 50%;
             border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 4px currentColor;
         }
 
-        .bar-container { width: 100%; height: 14px; background-color: #0f172a; border-radius: 3px; position: relative; border: 1px solid var(--border); overflow: hidden; margin-bottom: 2px; }
+        .bar-container { width: 100%; height: 16px; background-color: #0f172a; border-radius: 3px; position: relative; border: 1px solid var(--border); overflow: hidden; margin-bottom: 4px; }
         .bar { height: 100%; transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .bar-label { position: absolute; top: 0; left: 6px; font-size: 0.65em; font-weight: bold; line-height: 14px; text-shadow: 1px 1px 2px #000; z-index: 2; }
+        .bar-label { position: absolute; top: 0; left: 8px; font-size: 0.7em; font-weight: bold; line-height: 16px; text-shadow: 1px 1px 2px #000; z-index: 2; }
     </style>
 </head>
 <body>
@@ -195,13 +202,13 @@
         <div class="readout">
             <div>Incoming E = hc/λ: <span id="out-in" style="color:#a78bfa;">0.00 eV</span></div>
             <div>Vibrational Loss: <span id="out-heat" style="color:#fb923c;">0.00 eV</span></div>
-            <div style="border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px;">
+            <div style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;">
                 Emitted Photon: <span id="out-out" style="color:#34d399;">0.00 eV</span>
             </div>
             <div>Emission Wavelength: <span id="out-wave-out" style="display:flex; align-items:center; gap:6px;">--- nm</span></div>
         </div>
 
-        <div class="control-group" style="gap: 4px;">
+        <div class="control-group" style="gap: 4px; margin-top: auto;">
             <div class="bar-container">
                 <div class="bar" id="bar-in" style="width: 100%; background: linear-gradient(90deg, #6d28d9, #a78bfa);"></div>
                 <div class="bar-label">Excitation</div>
@@ -250,7 +257,6 @@
         'quinine': { wave: 350, heat: 24, qy: 55 }
     };
 
-    // Adjusted Y-coordinates for the even smaller canvases
     let state = {
         phase: 0, time: 0,
         energyIn: 0, energyHeat: 0, energyOut: 0,
@@ -375,18 +381,19 @@
         ctx.stroke(); ctx.restore();
     }
 
-    let lastTime = performance.now();
+    let lastTime = 0;
 
     function loop(timestamp) {
+        if (!lastTime) lastTime = timestamp;
         let dt = (timestamp - lastTime) / 1000; 
         lastTime = timestamp;
         if (dt > 0.1) dt = 0.1; 
         state.time += dt;
 
-        const molX = canvas.width / 2; const molY = 100; // Adjusted for 200px height
+        const molX = canvas.width / 2; const molY = 100;
         
-        const jS0_Y = 190; // Adjusted for 230px height
-        const jS1_Y = jS0_Y - (state.energyIn * 28); // Squeeze energy gap
+        const jS0_Y = 190; 
+        const jS1_Y = jS0_Y - (state.energyIn * 28); 
         const jS1_Relaxed_Y = Math.min(jS0_Y - 12, jS1_Y + Math.max(15, state.energyHeat * 28)); 
 
         if (state.phase === 1) { 
@@ -469,7 +476,6 @@
         
         if (state.phase === 1) drawPhoton(ctx, molX, molY, state.photonDistance, 0, state.waveIn, waveToRGB(state.waveIn));
         
-        // FLASHLIGHT SHAPE (Scaled down)
         ctx.fillStyle = '#334155'; 
         ctx.fillRect(10, molY - 10, 40, 20); 
         ctx.fillStyle = '#475569'; 
