@@ -41,14 +41,13 @@
             width: 100%;
         }
 
-.canvas-col {
+        .canvas-col {
             display: flex;
             flex-direction: column;
-            gap: 10px; /* This is your strict gap. Reduce to 5px if you want it tighter */
+            gap: 10px;
             flex: 1;
             min-width: 320px;
             max-width: 600px;
-            /* justify-content: space-between; <-- REMOVED */
         }
 
         .canvas-wrapper {
@@ -57,12 +56,10 @@
             border-radius: 8px;
             padding: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            
-            /* ADDED: Makes the boxes stretch to fill the column, keeping the edges aligned */
             flex: 1; 
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Keeps the canvas vertically centered in the taller box */
+            justify-content: center;
         }
     
         canvas {
@@ -128,6 +125,18 @@
         }
         button:hover:not(:disabled) { background-color: var(--accent-hover); transform: translateY(-1px); }
         button:disabled { background-color: var(--border); color: #64748b; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        #btn-reveal {
+            background-color: var(--border);
+            color: var(--text-main);
+            padding: 4px 10px;
+            margin: 0;
+            box-shadow: none;
+            font-size: 0.75em;
+        }
+        #btn-reveal:hover {
+            background-color: #475569;
+        }
 
         .status-box {
             background-color: #0f172a; border: 1px solid var(--border); padding: 8px;
@@ -216,7 +225,12 @@
             <div style="border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;">
                 Emitted Photon: <span id="out-out" style="color:#34d399;">0.00 eV</span>
             </div>
-            <div>Emission Wavelength: <span id="out-wave-out" style="display:flex; align-items:center; gap:6px;">--- nm</span></div>
+            <div>Emission Wavelength: 
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <button id="btn-reveal" onclick="revealWavelength()">Reveal</button>
+                    <span id="out-wave-out" style="display:none; align-items:center; gap:6px;">--- nm</span>
+                </span>
+            </div>
         </div>
 
         <div class="control-group" style="gap: 4px; margin-top: auto;">
@@ -265,12 +279,12 @@
     const dyePresets = {
         'base': { wave: 350, heat: 32, qy: 100 }, 
         'dapi': { wave: 350, heat: 25, qy: 50 },
-        'quinine': { wave: 350, heat: 24, qy: 55 },
+        'quinine': { wave: 350, heat: 27, qy: 55 },    // Tweaked heat for deeper Cyan
         'hoechst': { wave: 350, heat: 24, qy: 40 },
         'gfp_wt': { wave: 395, heat: 22, qy: 79 },
         'fura2': { wave: 340, heat: 33, qy: 23 },
         'qdot605': { wave: 350, heat: 42, qy: 60 },
-        'europium': { wave: 340, heat: 45, qy: 50 }
+        'europium': { wave: 340, heat: 48, qy: 50 }   // Tweaked heat for deeper Red
     };
 
     let state = {
@@ -288,6 +302,16 @@
         elements.slQY.disabled = disabled;
         elements.chkIso.disabled = disabled;
         elements.btnFire.disabled = disabled;
+    }
+
+    function revealWavelength() {
+        document.getElementById('btn-reveal').style.display = 'none';
+        document.getElementById('out-wave-out').style.display = 'flex';
+    }
+
+    function resetReveal() {
+        document.getElementById('btn-reveal').style.display = 'block';
+        document.getElementById('out-wave-out').style.display = 'none';
     }
 
     function waveToRGB(W) {
@@ -346,6 +370,7 @@
     }
 
     elements.selDye.addEventListener('change', (e) => {
+        resetReveal();
         if (e.target.value !== 'custom') {
             const p = dyePresets[e.target.value];
             elements.slWaveIn.value = p.wave; elements.slHeat.value = p.heat; elements.slQY.value = p.qy;
@@ -353,7 +378,6 @@
         }
     });
 
-    // These sliders change the physical properties of the dye, so they trigger "Custom"
     [elements.slHeat, elements.slQY].forEach(el => {
         el.addEventListener('input', () => { 
             elements.selDye.value = 'custom'; 
@@ -361,7 +385,6 @@
         });
     });
 
-    // The wavelength slider just changes the input light, so it keeps the current dye selected
     elements.slWaveIn.addEventListener('input', () => { 
         if (state.phase === 0) calculatePhysics(false); 
     });
