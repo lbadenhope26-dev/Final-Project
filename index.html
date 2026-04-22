@@ -175,7 +175,6 @@
             <label>Fluorophore Preset</label>
             <select id="sel-dye">
                 <option value="base">Base Example (UV to Green)</option>
-                <option value="custom">Custom Parameters</option>
                 <option value="dapi">DAPI (UV to Blue)</option>
                 <option value="quinine">Quinine / Tonic Water (UV to Cyan)</option>
                 <option value="hoechst">Hoechst 33342 (UV to Blue)</option>
@@ -183,6 +182,7 @@
                 <option value="fura2">Fura-2 (UV to Green)</option>
                 <option value="qdot605">Quantum Dot 605 (UV to Orange)</option>
                 <option value="europium">Europium Chelate (UV to Red)</option>
+                <option value="custom">Custom Parameters</option>
             </select>
         </div>
         
@@ -354,8 +354,17 @@
         }
     });
 
-    [elements.slWaveIn, elements.slHeat, elements.slQY].forEach(el => {
-        el.addEventListener('input', () => { elements.selDye.value = 'custom'; if (state.phase === 0) calculatePhysics(false); });
+    // These sliders change the physical properties of the dye, so they trigger "Custom"
+    [elements.slHeat, elements.slQY].forEach(el => {
+        el.addEventListener('input', () => { 
+            elements.selDye.value = 'custom'; 
+            if (state.phase === 0) calculatePhysics(false); 
+        });
+    });
+
+    // The wavelength slider just changes the input light, so it keeps the current dye selected
+    elements.slWaveIn.addEventListener('input', () => { 
+        if (state.phase === 0) calculatePhysics(false); 
     });
 
     function firePhoton() {
