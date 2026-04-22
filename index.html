@@ -167,7 +167,7 @@
         <div class="control-group">
             <label>Fluorophore Preset</label>
             <select id="sel-dye">
-                <option value="assignment">Assignment Goal (UV to Green)</option>
+                <option value="base">Base Example (UV to Green)</option>
                 <option value="custom">Custom Parameters</option>
                 <option value="dapi">DAPI (UV to Blue)</option>
                 <option value="quinine">Quinine / Tonic Water (UV to Cyan)</option>
@@ -257,7 +257,7 @@
     let particles = []; 
 
     const dyePresets = {
-        'assignment': { wave: 350, heat: 32, qy: 100 }, 
+        'base': { wave: 350, heat: 32, qy: 100 }, 
         'dapi': { wave: 350, heat: 25, qy: 50 },
         'quinine': { wave: 350, heat: 24, qy: 55 },
         'hoechst': { wave: 350, heat: 24, qy: 40 },
@@ -591,10 +591,10 @@
         requestAnimationFrame(loop);
     }
 
-    elements.selDye.value = 'assignment';
-    elements.slWaveIn.value = dyePresets['assignment'].wave;
-    elements.slHeat.value = dyePresets['assignment'].heat;
-    elements.slQY.value = dyePresets['assignment'].qy;
+    elements.selDye.value = 'base';
+    elements.slWaveIn.value = dyePresets['base'].wave;
+    elements.slHeat.value = dyePresets['base'].heat;
+    elements.slQY.value = dyePresets['base'].qy;
     calculatePhysics(false);
     requestAnimationFrame(loop);
 
