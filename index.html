@@ -381,11 +381,13 @@
     [elements.slHeat, elements.slQY].forEach(el => {
         el.addEventListener('input', () => { 
             elements.selDye.value = 'custom'; 
+            resetReveal();
             if (state.phase === 0) calculatePhysics(false); 
         });
     });
 
     elements.slWaveIn.addEventListener('input', () => { 
+        resetReveal();
         if (state.phase === 0) calculatePhysics(false); 
     });
 
